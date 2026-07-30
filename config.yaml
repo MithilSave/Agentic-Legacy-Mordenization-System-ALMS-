@@ -1,0 +1,91 @@
+# ============================================
+# Architecture Migration Assistant — Configuration
+# Source of truth: CONTEXT.md / IMPLEMENTATION_PLAN_v2.md
+# ============================================
+
+# --- Ollama Connection ---
+ollama:
+  host: "http://localhost:11434"
+  model: "qwen2.5:7b"
+  embedding_model: "nomic-embed-text"
+
+# --- Per-Agent Model Settings ---
+# Different context windows to manage RAM (16GB laptop)
+agents:
+  analyzer:
+    num_ctx: 4096
+    temperature: 0.05
+    description: "Codebase parsing & AST analysis"
+    rag_categories:
+      - "refactoring_patterns"
+    rag_top_k: 3
+
+  architect:
+    num_ctx: 4096
+    temperature: 0.1
+    description: "DDD bounded context proposals"
+    rag_categories:
+      - "ddd_patterns"
+    rag_top_k: 3
+
+  refactoring:
+    num_ctx: 6144
+    temperature: 0.2
+    description: "FastAPI code generation"
+    rag_categories:
+      - "fastapi_patterns"
+      - "security_patterns"
+    rag_top_k: 3
+
+  test_gen:
+    num_ctx: 4096
+    temperature: 0.15
+    description: "Test suite generation"
+    rag_categories:
+      - "testing_patterns"
+    rag_top_k: 3
+
+# --- ChromaDB ---
+chromadb:
+  persist_directory: "./chroma_db"
+  collection_name: "migration_kb"
+
+# --- DiskCache ---
+cache:
+  directory: "./cache_db"
+  size_limit: 1073741824  # 1GB
+
+# --- RAG Settings ---
+rag:
+  relevance_threshold: 0.70  # Cosine similarity minimum
+  chunk_size: 500
+  chunk_overlap: 100
+
+# --- Safety ---
+safety:
+  max_retries: 3
+  escalate_after_retries: true
+  bandit_severity: "HIGH"
+  bandit_confidence: "HIGH"
+
+# --- HITL ---
+hitl:
+  approval_mode: "cli"  # "cli" or "streamlit"
+  checkpoints:
+    - "after_architect"
+    - "after_test_gen"
+
+# --- Audit ---
+audit:
+  database: "./audit.db"
+  log_level: "INFO"
+
+# --- Knowledge Base ---
+knowledge_base:
+  docs_directory: "./knowledge_base"
+  categories:
+    - "refactoring_patterns"
+    - "fastapi_patterns"
+    - "ddd_patterns"
+    - "security_patterns"
+    - "testing_patterns"
