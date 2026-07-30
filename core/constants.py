@@ -196,6 +196,21 @@ class TestGenOutput(BaseModel):
 #  ORCHESTRATOR STATE
 # ══════════════════════════════════════════════
 
+class ServiceUnit(BaseModel):
+    """Tracks one proposed microservice through refactor -> validate -> test.
+
+    Replaces the old flat `refactoring_outputs` list / single `test_gen_output`
+    field so every proposed service (not just the first) carries its own
+    refactor output, test output, and retry state through the graph.
+    """
+    service: ServiceBoundary
+    refactoring_output: Optional[RefactoringOutput] = None
+    test_gen_output: Optional[TestGenOutput] = None
+    compile_attempts: int = 0
+    needs_human_review: bool = False
+    status: str = "pending"  # pending | refactoring | validating | testing | done | failed
+
+
 class PipelineState(BaseModel):
     """The stateful workflow state passed between agents.
 
@@ -206,9 +221,9 @@ class PipelineState(BaseModel):
     source_code: Dict[str, str] = Field(default_factory=dict, description="filename -> content")
     current_phase: AgentPhase = AgentPhase.INIT
     analyzer_output: Optional[AnalyzerOutput] = None
+    dependency_review_approved: bool = False
     architect_output: Optional[ArchitectOutput] = None
-    refactoring_outputs: List[RefactoringOutput] = Field(default_factory=list)
-    test_gen_output: Optional[TestGenOutput] = None
+    service_units: List[ServiceUnit] = Field(default_factory=list)
     human_approvals: List[Dict[str, Any]] = Field(default_factory=list)
     iteration_count: int = 0
     errors: List[str] = Field(default_factory=list)
@@ -311,6 +326,11 @@ CODE QUALITY STANDARDS:
 - Comprehensive error handling (try-except, HTTPException)
 - Structured logging with JSON format
 - Security best practices (input validation, SQL injection prevention)
+
+SQLALCHEMY ORM CONSTRAINTS:
+- You MUST import `declarative_base`, `ForeignKey`, and `datetime` if defining models.
+- You MUST declare `Base = declarative_base()` and ensure all ORM models inherit from `Base` (e.g. `class UserORM(Base):`).
+- You MUST include `Base.metadata.create_all(bind=engine)` after your model definitions to ensure the database initializes on startup.
 
 GENERATED CODE MUST:
 - Pass py_compile check

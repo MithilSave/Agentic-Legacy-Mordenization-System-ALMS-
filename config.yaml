@@ -72,6 +72,7 @@ safety:
 hitl:
   approval_mode: "cli"  # "cli" or "streamlit"
   checkpoints:
+    - "after_analyze"
     - "after_architect"
     - "after_test_gen"
 

@@ -12,13 +12,17 @@ import time
 import uuid
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Callable, TypedDict
+from typing import Dict, Any, Optional, Callable, TypedDict, List, Annotated
 
 # pyrefly: ignore [missing-import]
 from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send
 
 from core.config import Config
-from core.constants import PipelineState, AgentPhase, AnalyzerOutput, ArchitectOutput
+from core.constants import (
+    PipelineState, AgentPhase, AnalyzerOutput, ArchitectOutput,
+    ServiceUnit, ServiceBoundary, RefactoringOutput,
+)
 from agents.analyzer_agent import AnalyzerAgent
 from agents.architect_agent import ArchitectAgent
 from agents.refactoring_agent import RefactoringAgent
@@ -31,9 +35,64 @@ from storage.audit_logger import AuditLogger
 logger = logging.getLogger("core.orchestrator")
 
 
+def route_after_hitl(approved: bool, feedback: str) -> str:
+    """Decide graph routing from a HITL decision.
+
+    Returns 'approve', 'fail' (feedback is a stop keyword), or 'reject'.
+    """
+    if approved:
+        return "approve"
+    if feedback.strip().lower() in ("quit", "exit", "stop", "fail"):
+        return "fail"
+    return "reject"
+
+
+def next_compile_action(compile_attempts: int, passed: bool, max_attempts: int = 3) -> str:
+    """Decide what to do after a py_compile validation attempt.
+
+    Returns 'pass' (move to test-gen), 'retry' (loop back to refactor),
+    or 'needs_review' (exhausted retries, flag for a human).
+    """
+    if passed:
+        return "pass"
+    if compile_attempts < max_attempts:
+        return "retry"
+    return "needs_review"
+
+
+def _replace_by_service_name(existing: list, updates: list) -> list:
+    """Reducer for the `service_units` graph channel.
+
+    Merges by `service.name` instead of concatenating (unlike `operator.add`):
+    each parallel Send branch contributes exactly one entry per service, and
+    if the human rejects the final gate and the fan-out re-runs, the new
+    result replaces the old one for that service instead of duplicating it.
+    """
+    merged = {u.service.name: u for u in existing}
+    for u in updates:
+        merged[u.service.name] = u
+    return list(merged.values())
+
+
 class GraphState(TypedDict):
-    """The state channel for LangGraph."""
+    """The state channels for LangGraph.
+
+    `state` uses default (replace) semantics. `service_units` uses the
+    `_replace_by_service_name` reducer so parallel branches can merge their
+    results into a single list without race conditions or duplicates.
+    """
     state: PipelineState
+    service_units: Annotated[List[ServiceUnit], _replace_by_service_name]
+
+
+class ServiceBranchState(TypedDict):
+    """Local state for the per-service fan-out subgraph."""
+    pipeline_state: PipelineState
+    service_units: Annotated[List[ServiceUnit], _replace_by_service_name]
+    branch_service: ServiceBoundary
+    branch_compile_attempts: int
+    branch_refactoring_output: Optional[RefactoringOutput]
+    branch_last_error: Optional[str]
 
 
 class PipelineOrchestrator:
@@ -75,33 +134,84 @@ class PipelineOrchestrator:
         # Build LangGraph
         self.graph = self._build_graph()
 
+    def _build_service_graph(self):
+        """Build the subgraph that executes for each proposed service in parallel."""
+        builder = StateGraph(ServiceBranchState)
+        
+        builder.add_node("refactor_service", self._node_refactor_service)
+        builder.add_node("validate_service", self._node_validate_service)
+        builder.add_node("mark_needs_review", self._node_mark_needs_review)
+        builder.add_node("test_gen_service", self._node_test_gen_service)
+        
+        builder.add_edge(START, "refactor_service")
+        builder.add_edge("refactor_service", "validate_service")
+        
+        builder.add_conditional_edges(
+            "validate_service",
+            self._route_validate_service,
+            {
+                "retry": "refactor_service",
+                "needs_review": "mark_needs_review",
+                "pass": "test_gen_service",
+            },
+        )
+        builder.add_edge("mark_needs_review", END)
+        builder.add_edge("test_gen_service", END)
+        
+        return builder.compile()
+
     def _build_graph(self):
         builder = StateGraph(GraphState)
 
         builder.add_node("analyze", self._node_analyze)
+        builder.add_node("hitl_analyze", self._node_hitl_analyze)
         builder.add_node("architect", self._node_architect)
         builder.add_node("hitl_architect", self._node_hitl_architect)
-        builder.add_node("refactor", self._node_refactor)
-        builder.add_node("test_gen", self._node_test_gen)
-        builder.add_node("hitl_tests", self._node_hitl_tests)
+        
+        # Subgraph node for parallel fan-out
+        service_subgraph = self._build_service_graph()
+        builder.add_node("process_service", service_subgraph)
+        
+        builder.add_node("join", self._node_join)
 
         builder.add_edge(START, "analyze")
-        builder.add_edge("analyze", "architect")
+        builder.add_edge("analyze", "hitl_analyze")
+
+        builder.add_conditional_edges(
+            "hitl_analyze",
+            self._route_hitl_analyze,
+            {"approve": "architect", "reject": "analyze", "fail": END},
+        )
+
         builder.add_edge("architect", "hitl_architect")
-        
+
+        def _route_after_architect_hitl(gstate: GraphState):
+            state = gstate["state"]
+            approved = getattr(state, "_last_hitl_approved", True)
+            feedback = state.human_approvals[-1].get("feedback", "") if state.human_approvals else ""
+            route = route_after_hitl(approved, feedback)
+            if route == "fail":
+                state.current_phase = AgentPhase.FAILED
+                self._emit("pipeline_rejected", {"checkpoint": "after_architect"})
+                return END
+            if route == "reject":
+                return "architect"
+            return self._dispatch_refactor_sends(state)
+
         builder.add_conditional_edges(
             "hitl_architect",
-            self._route_hitl_architect,
-            {"approve": "refactor", "reject": "architect", "fail": END}
+            _route_after_architect_hitl,
+            ["architect", "process_service", END],
         )
-        
-        builder.add_edge("refactor", "test_gen")
-        builder.add_edge("test_gen", "hitl_tests")
-        
+
+        builder.add_edge("process_service", "join")
+
+        builder.add_node("hitl_final", self._node_hitl_final)
+        builder.add_edge("join", "hitl_final")
         builder.add_conditional_edges(
-            "hitl_tests",
-            self._route_hitl_tests,
-            {"approve": END, "reject": "test_gen", "fail": END}
+            "hitl_final",
+            self._route_hitl_final,
+            ["process_service", END],
         )
 
         return builder.compile()
@@ -132,20 +242,26 @@ class PipelineOrchestrator:
 
         try:
             # Execute LangGraph workflow
-            final_state = self.graph.invoke({"state": self.state})
+            final_state = self.graph.invoke({
+                "state": self.state,
+                "service_units": [],
+            })
             self.state = final_state["state"]
 
             if self.state.current_phase != AgentPhase.FAILED:
                 self.state.current_phase = AgentPhase.COMPLETE
+                total_tests = sum(
+                    u.test_gen_output.total_tests for u in self.state.service_units if u.test_gen_output
+                )
                 self._emit("pipeline_complete", {
-                    "services": len(self.state.refactoring_outputs),
-                    "tests": self.state.test_gen_output.total_tests if self.state.test_gen_output else 0,
+                    "services": len(self.state.service_units),
+                    "tests": total_tests,
                 })
 
                 self.audit.complete_pipeline_run(
                     self.run_id, "completed",
-                    services=len(self.state.refactoring_outputs),
-                    tests=self.state.test_gen_output.total_tests if self.state.test_gen_output else 0,
+                    services=len(self.state.service_units),
+                    tests=total_tests,
                 )
         except Exception as e:
             self.state.current_phase = AgentPhase.FAILED
@@ -222,6 +338,28 @@ class PipelineOrchestrator:
 
         return {"state": state}
 
+    def _node_hitl_analyze(self, gstate: GraphState) -> GraphState:
+        state = gstate["state"]
+        if getattr(state, "_skip_hitl", False):
+            state._last_hitl_approved = True
+            state.dependency_review_approved = True
+            return {"state": state}
+
+        approved = self._hitl_checkpoint("after_analyze", state.analyzer_output, state)
+        state._last_hitl_approved = approved
+        state.dependency_review_approved = approved
+        return {"state": state}
+
+    def _route_hitl_analyze(self, gstate: GraphState) -> str:
+        state = gstate["state"]
+        approved = getattr(state, "_last_hitl_approved", True)
+        feedback = state.human_approvals[-1].get("feedback", "") if state.human_approvals else ""
+        route = route_after_hitl(approved, feedback)
+        if route == "fail":
+            state.current_phase = AgentPhase.FAILED
+            self._emit("pipeline_rejected", {"checkpoint": "after_analyze"})
+        return route
+
     def _node_hitl_architect(self, gstate: GraphState) -> GraphState:
         state = gstate["state"]
         if getattr(state, "_skip_hitl", False):
@@ -232,102 +370,173 @@ class PipelineOrchestrator:
         state._last_hitl_approved = approved
         return {"state": state}
 
-    def _route_hitl_architect(self, gstate: GraphState) -> str:
-        state = gstate["state"]
-        if not getattr(state, "_last_hitl_approved", True):
-            last_feedback = state.human_approvals[-1].get("feedback", "")
-            if last_feedback.lower() in ("quit", "exit", "stop", "fail"):
-                state.current_phase = AgentPhase.FAILED
-                self._emit("pipeline_rejected", {"checkpoint": "after_architect"})
-                return "fail"
-            # Cycle back to architect to refine based on feedback
-            return "reject"
-        return "approve"
-
-    def _node_refactor(self, gstate: GraphState) -> GraphState:
-        state = gstate["state"]
-        state.current_phase = AgentPhase.REFACTORING
-        self._emit("phase_start", {"phase": "refactoring", "agent": "Refactoring"})
-
-        start = time.time()
-        state.refactoring_outputs = []
-
-        for i, service in enumerate(state.architect_output.proposed_services):
-            self._emit("refactoring_service", {
-                "service": service.name,
-                "index": i + 1,
-                "total": len(state.architect_output.proposed_services),
+    def _dispatch_refactor_sends(self, state: PipelineState) -> list:
+        """One Send per proposed service, each starting a fresh retry counter."""
+        return [
+            Send("process_service", {
+                "pipeline_state": state,
+                "branch_service": svc,
+                "branch_compile_attempts": 0,
+                "branch_refactoring_output": None,
+                "branch_last_error": None,
             })
-            try:
-                output = self.refactoring.refactor_service(service, state.source_code)
-                state.refactoring_outputs.append(output)
-            except Exception as e:
-                logger.error(f"Refactoring failed for {service.name}: {e}")
-                state.errors.append(f"Refactoring {service.name}: {e}")
+            for svc in state.architect_output.proposed_services
+        ]
+
+    def _node_refactor_service(self, gstate: ServiceBranchState) -> Dict[str, Any]:
+        state = gstate["pipeline_state"]
+        service = gstate["branch_service"]
+        attempts = gstate["branch_compile_attempts"] + 1
+
+        self._emit("refactoring_service", {"service": service.name, "attempt": attempts})
+        start = time.time()
+        try:
+            output = self.refactoring.refactor_service(service, state.source_code)
+        except Exception as e:
+            logger.error(f"Refactoring failed for {service.name}: {e}")
+            self.audit.log_agent_action(
+                "refactoring", f"{service.name} raised an exception",
+                phase="refactoring", success=False, error_message=str(e),
+            )
+            return {
+                "branch_service": service,
+                "branch_compile_attempts": attempts,
+                "branch_refactoring_output": None,
+                "branch_last_error": str(e),
+            }
 
         duration = int((time.time() - start) * 1000)
+        self.audit.log_agent_action(
+            "refactoring", f"Generated {service.name} (attempt {attempts})",
+            phase="refactoring", duration_ms=duration,
+            details={"py_compile_passed": output.py_compile_passed},
+        )
+        return {
+            "branch_service": service,
+            "branch_compile_attempts": attempts,
+            "branch_refactoring_output": output,
+            "branch_last_error": None,
+        }
+
+    def _node_validate_service(self, gstate: ServiceBranchState) -> Dict[str, Any]:
+        # No-op node: the routing decision happens in _route_validate_service.
+        # Present as its own node (rather than folded into refactor_service)
+        # so the retry loop is visible as a distinct graph edge.
+        return {}
+
+    def _route_validate_service(self, gstate: ServiceBranchState) -> str:
+        output = gstate["branch_refactoring_output"]
+        passed = bool(output) and output.py_compile_passed
+        action = next_compile_action(
+            gstate["branch_compile_attempts"],
+            passed,
+            self.config.max_retries,
+        )
+        return action
+
+    def _node_mark_needs_review(self, gstate: ServiceBranchState) -> Dict[str, Any]:
+        service = gstate["branch_service"]
+        unit = ServiceUnit(
+            service=service,
+            refactoring_output=gstate["branch_refactoring_output"],
+            compile_attempts=gstate["branch_compile_attempts"],
+            needs_human_review=True,
+            status="failed",
+        )
+        self.audit.log_agent_action(
+            "refactoring", f"{service.name} exceeded retry limit ({gstate['branch_compile_attempts']} attempts)",
+            phase="refactoring", success=False,
+            error_message=gstate.get("branch_last_error") or "py_compile failed repeatedly",
+        )
+        # Since this node is in a subgraph, returning {"service_units": [unit]}
+        # makes the subgraph's output contain that key, which LangGraph then 
+        # forwards to the parent graph's reducer.
+        return {"service_units": [unit]}
+
+    def _node_test_gen_service(self, gstate: ServiceBranchState) -> Dict[str, Any]:
+        state = gstate["pipeline_state"]
+        service = gstate["branch_service"]
+        refactoring_output = gstate["branch_refactoring_output"]
+
+        start = time.time()
+        try:
+            test_output = self.test_gen.generate_tests(refactoring_output, state.source_code)
+        except Exception as e:
+            logger.error(f"Test generation failed for {service.name}: {e}")
+            self.audit.log_agent_action(
+                "test_gen", f"{service.name} test generation raised an exception",
+                phase="testing", success=False, error_message=str(e),
+            )
+            unit = ServiceUnit(
+                service=service,
+                refactoring_output=refactoring_output,
+                compile_attempts=gstate["branch_compile_attempts"],
+                needs_human_review=True,
+                status="failed",
+            )
+            return {"service_units": [unit]}
+
+        duration = int((time.time() - start) * 1000)
+        self.audit.log_agent_action(
+            "test_gen", f"Generated tests for {service.name}",
+            phase="testing", duration_ms=duration,
+            details={"tests": test_output.total_tests},
+        )
+        unit = ServiceUnit(
+            service=service,
+            refactoring_output=refactoring_output,
+            test_gen_output=test_output,
+            compile_attempts=gstate["branch_compile_attempts"],
+            needs_human_review=False,
+            status="done",
+        )
+        return {"service_units": [unit]}
+
+    def _node_join(self, gstate: GraphState) -> GraphState:
+        state = gstate["state"]
+        state.service_units = gstate["service_units"]
+        state.current_phase = AgentPhase.TESTING
+        total_tests = sum(
+            u.test_gen_output.total_tests for u in state.service_units if u.test_gen_output
+        )
         self._emit("phase_complete", {
-            "phase": "refactoring",
-            "services_generated": len(state.refactoring_outputs),
-            "duration_ms": duration,
+            "phase": "testing",
+            "services_processed": len(state.service_units),
+            "tests_generated": total_tests,
         })
         return {"state": state}
 
-    def _node_test_gen(self, gstate: GraphState) -> GraphState:
-        state = gstate["state"]
-        state.current_phase = AgentPhase.TESTING
-        self._emit("phase_start", {"phase": "testing", "agent": "Test-Gen"})
-
-        start = time.time()
-        if not state.refactoring_outputs:
-            return {"state": state}
-            
-        first_output = state.refactoring_outputs[0]
-        try:
-            state.test_gen_output = self.test_gen.generate_tests(first_output, state.source_code)
-            duration = int((time.time() - start) * 1000)
-            self._emit("phase_complete", {
-                "phase": "testing",
-                "tests_generated": state.test_gen_output.total_tests,
-                "duration_ms": duration,
-            })
-        except Exception as e:
-            logger.error(f"Test generation failed: {e}")
-            raise
-        return {"state": state}
-
-    def _node_hitl_tests(self, gstate: GraphState) -> GraphState:
+    def _node_hitl_final(self, gstate: GraphState) -> GraphState:
         state = gstate["state"]
         if getattr(state, "_skip_hitl", False):
             state._last_hitl_approved = True
             return {"state": state}
 
-        approved = self._hitl_checkpoint("after_test_gen", state.test_gen_output, state)
+        approved = self._hitl_checkpoint("after_test_gen", state.service_units, state)
         state._last_hitl_approved = approved
         return {"state": state}
 
-    def _route_hitl_tests(self, gstate: GraphState) -> str:
+    def _route_hitl_final(self, gstate: GraphState):
         state = gstate["state"]
-        if not getattr(state, "_last_hitl_approved", True):
-            last_feedback = state.human_approvals[-1].get("feedback", "")
-            if last_feedback.lower() in ("quit", "exit", "stop", "fail"):
-                state.current_phase = AgentPhase.FAILED
-                self._emit("pipeline_rejected", {"checkpoint": "after_test_gen"})
-                return "fail"
-            return "reject"
-        return "approve"
-
-
+        approved = getattr(state, "_last_hitl_approved", True)
+        feedback = state.human_approvals[-1].get("feedback", "") if state.human_approvals else ""
+        route = route_after_hitl(approved, feedback)
+        if route == "fail":
+            state.current_phase = AgentPhase.FAILED
+            self._emit("pipeline_rejected", {"checkpoint": "after_test_gen"})
+            return END
+        if route == "approve":
+            return END
+        return self._dispatch_refactor_sends(state)
     # ──────────────────────────────────────────────
     # HITL Utilities
     # ──────────────────────────────────────────────
 
     def _hitl_checkpoint(self, checkpoint_name: str, output: Any, state: PipelineState) -> bool:
-        self._emit("hitl_checkpoint", {"checkpoint": checkpoint_name})
         state.iteration_count += 1
 
         if self.ui_callback:
-            result = self.ui_callback("hitl_approval", {
+            result = self.ui_callback("hitl_checkpoint", {
                 "checkpoint": checkpoint_name,
                 "iteration": state.iteration_count,
                 "output": output,

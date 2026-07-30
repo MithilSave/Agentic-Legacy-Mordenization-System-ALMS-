@@ -41,9 +41,9 @@ BANNER = r"""
     ╔══════════════════════════════════════════════════════════════════╗
     ║                                                                  ║
     ║     █████╗ ██████╗  ██████╗██╗  ██╗    ███╗   ███╗██╗ ██████╗   ║
-    ║    ██╔══██╗██╔══██╗██╔════╝██║  ██║    ████╗ ████║██║██╔════╝   ║
+    ║    ██╔══██╗██╔══██╗██╔════╝██║  ██║    ████╗ ████║██║██╔════╝    ║
     ║    ███████║██████╔╝██║     ███████║    ██╔████╔██║██║██║  ███╗  ║
-    ║    ██╔══██║██╔══██╗██║     ██╔══██║    ██║╚██╔╝██║██║██║   ██║  ║
+    ║    ██╔══██║██╔══██╗██║     ██╔══██║    ██║╚██╔╝██║██║██║   ██║   ║
     ║    ██║  ██║██║  ██║╚██████╗██║  ██║    ██║ ╚═╝ ██║██║╚██████╔╝  ║
     ║    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝     ╚═╝╚═╝ ╚═════╝   ║
     ║                                                                  ║
@@ -62,7 +62,7 @@ BANNER = r"""
 PIPELINE_DIAGRAM = """
 [bright_green]
   ┌──────────┐    ┌──────────┐    ┌──────┐    ┌──────────┐    ┌──────────┐    ┌──────┐
-  │ ANALYZER │───▶│ARCHITECT │───▶│ HITL │───▶│REFACTOR  │───▶│ TEST-GEN │───▶│ HITL │
+  │ ANALYZER │──▶│ARCHITECT │───▶│ HITL │───▶│REFACTOR  │──▶│ TEST-GEN │──▶│ HITL │
   │   Agent  │    │  Agent   │    │ Gate │    │  Agent   │    │  Agent   │    │ Gate │
   └──────────┘    └──────────┘    └──────┘    └──────────┘    └──────────┘    └──────┘
        {s1}             {s2}           {s3}          {s4}             {s5}          {s6}
@@ -99,6 +99,7 @@ class DOSDashboard:
         # Phase status tracking
         self.phase_status = {
             "analyzing": "⬜",
+            "hitl_0": "⬜",
             "architecting": "⬜",
             "hitl_1": "⬜",
             "refactoring": "⬜",
@@ -276,7 +277,9 @@ class DOSDashboard:
         checkpoint = data.get("checkpoint", "unknown")
 
         # Update status
-        if "architect" in checkpoint:
+        if "analyze" in checkpoint:
+            self.phase_status["hitl_0"] = "⏸️"
+        elif "architect" in checkpoint:
             self.phase_status["hitl_1"] = "⏸️"
         elif "test_gen" in checkpoint:
             self.phase_status["hitl_2"] = "⏸️"
@@ -304,7 +307,12 @@ class DOSDashboard:
             feedback = self.console.input("[bold bright_yellow]  ▸ Feedback: [/]").strip()
 
         # Update status
-        status_key = "hitl_1" if "architect" in checkpoint else "hitl_2"
+        if "analyze" in checkpoint:
+            status_key = "hitl_0"
+        elif "architect" in checkpoint:
+            status_key = "hitl_1"
+        else:
+            status_key = "hitl_2"
         self.phase_status[status_key] = "✅" if approved else "❌"
 
         self.console.print(

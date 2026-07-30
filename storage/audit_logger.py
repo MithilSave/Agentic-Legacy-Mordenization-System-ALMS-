@@ -6,6 +6,7 @@ Per CONTEXT.md: SQLite, not PostgreSQL/ELK.
 """
 
 import sqlite3
+import threading
 import json
 import logging
 from datetime import datetime
@@ -27,6 +28,7 @@ class AuditLogger:
         self.config = config or Config()
         self.db_path = self.config.audit_db_path
         self._conn = None
+        self._lock = threading.Lock()
         self._init_db()
 
     def _init_db(self):
@@ -100,23 +102,24 @@ class AuditLogger:
             success: Whether the action succeeded
             error_message: Error message if failed
         """
-        conn = self._get_conn()
-        conn.execute(
-            """INSERT INTO audit_log
-            (timestamp, agent, action, phase, details, duration_ms, success, error_message)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                datetime.now().isoformat(),
-                agent,
-                action,
-                phase,
-                json.dumps(details) if details else None,
-                duration_ms,
-                1 if success else 0,
-                error_message,
+        with self._lock:
+            conn = self._get_conn()
+            conn.execute(
+                """INSERT INTO audit_log
+                (timestamp, agent, action, phase, details, duration_ms, success, error_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    datetime.now().isoformat(),
+                    agent,
+                    action,
+                    phase,
+                    json.dumps(details) if details else None,
+                    duration_ms,
+                    1 if success else 0,
+                    error_message,
+                )
             )
-        )
-        conn.commit()
+            conn.commit()
 
         # Also log to Python logger
         level = logging.INFO if success else logging.ERROR
@@ -131,48 +134,51 @@ class AuditLogger:
         iteration: int = 1,
     ):
         """Log a Human-in-the-Loop decision."""
-        conn = self._get_conn()
-        conn.execute(
-            """INSERT INTO hitl_decisions
-            (timestamp, checkpoint, approved, approver, feedback, iteration)
-            VALUES (?, ?, ?, ?, ?, ?)""",
-            (
-                datetime.now().isoformat(),
-                checkpoint,
-                1 if approved else 0,
-                approver,
-                feedback,
-                iteration,
+        with self._lock:
+            conn = self._get_conn()
+            conn.execute(
+                """INSERT INTO hitl_decisions
+                (timestamp, checkpoint, approved, approver, feedback, iteration)
+                VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                    datetime.now().isoformat(),
+                    checkpoint,
+                    1 if approved else 0,
+                    approver,
+                    feedback,
+                    iteration,
+                )
             )
-        )
-        conn.commit()
+            conn.commit()
         logger.info(f"[HITL] {checkpoint}: {'APPROVED' if approved else 'REJECTED'} by {approver}")
 
     def start_pipeline_run(self, project_id: str, source_path: str) -> int:
         """Record the start of a pipeline run. Returns run ID."""
-        conn = self._get_conn()
-        cursor = conn.execute(
-            """INSERT INTO pipeline_runs (project_id, source_path, started_at)
-            VALUES (?, ?, ?)""",
-            (project_id, source_path, datetime.now().isoformat())
-        )
-        conn.commit()
-        return cursor.lastrowid
+        with self._lock:
+            conn = self._get_conn()
+            cursor = conn.execute(
+                """INSERT INTO pipeline_runs (project_id, source_path, started_at)
+                VALUES (?, ?, ?)""",
+                (project_id, source_path, datetime.now().isoformat())
+            )
+            conn.commit()
+            return cursor.lastrowid
 
     def complete_pipeline_run(
         self, run_id: int, status: str = "completed",
         services: int = 0, tests: int = 0, summary: str = ""
     ):
         """Record pipeline completion."""
-        conn = self._get_conn()
-        conn.execute(
-            """UPDATE pipeline_runs
-            SET completed_at = ?, status = ?, services_generated = ?,
-                tests_generated = ?, summary = ?
-            WHERE id = ?""",
-            (datetime.now().isoformat(), status, services, tests, summary, run_id)
-        )
-        conn.commit()
+        with self._lock:
+            conn = self._get_conn()
+            conn.execute(
+                """UPDATE pipeline_runs
+                SET completed_at = ?, status = ?, services_generated = ?,
+                    tests_generated = ?, summary = ?
+                WHERE id = ?""",
+                (datetime.now().isoformat(), status, services, tests, summary, run_id)
+            )
+            conn.commit()
 
     def get_recent_logs(self, limit: int = 50) -> List[Dict]:
         """Get recent audit log entries."""

@@ -124,11 +124,21 @@ def run_pipeline(source_path: str, skip_hitl: bool = False):
         if state.architect_output:
             dashboard.show_architect_results(state.architect_output)
 
-        if state.refactoring_outputs:
-            dashboard.show_refactoring_results(state.refactoring_outputs)
+        if state.service_units:
+            refactoring_outputs = [u.refactoring_output for u in state.service_units if u.refactoring_output]
+            if refactoring_outputs:
+                dashboard.show_refactoring_results(refactoring_outputs)
 
-        if state.test_gen_output:
-            dashboard.show_test_results(state.test_gen_output)
+            for unit in state.service_units:
+                if unit.test_gen_output:
+                    dashboard.show_test_results(unit.test_gen_output)
+
+            needs_review = [u.service.name for u in state.service_units if u.needs_human_review]
+            if needs_review:
+                dashboard.console.print(
+                    f"\n[bold bright_yellow]  ⚠ Services needing manual review "
+                    f"(exceeded retry limit): {', '.join(needs_review)}[/]"
+                )
 
         # Show errors if any
         if state.errors:
@@ -168,8 +178,15 @@ def _save_outputs(state, source_path: str):
         with open(output_dir / "architect_output.json", "w") as f:
             json.dump(state.architect_output.model_dump(), f, indent=2, default=str)
 
+    # Initialize docker-compose structure
+    compose_services = {}
+    base_port = 8000
+
     # Save generated service code
-    for refactoring_output in state.refactoring_outputs:
+    for unit in state.service_units:
+        if not unit.refactoring_output:
+            continue
+        refactoring_output = unit.refactoring_output
         service_dir = output_dir / refactoring_output.service_name
         service_dir.mkdir(exist_ok=True)
 
@@ -191,14 +208,34 @@ CMD ["uvicorn", "generated:app", "--host", "0.0.0.0", "--port", "8000"]
         # Add requirements.txt
         reqs_content = "fastapi\nuvicorn\nsqlalchemy\npydantic\n"
         (service_dir / "requirements.txt").write_text(reqs_content, encoding="utf-8")
+        
+        # Add to docker-compose
+        service_name_slug = refactoring_output.service_name.lower().replace(" ", "-")
+        compose_services[service_name_slug] = {
+            "build": f"./{refactoring_output.service_name}",
+            "ports": [f"{base_port}:8000"],
+            "restart": "always"
+        }
+        base_port += 1
 
-    # Save test suite
-    if state.test_gen_output:
-        tests_dir = output_dir / "tests"
+    # Generate docker-compose.yml
+    if compose_services:
+        import yaml
+        compose_content = {
+            "version": "3.8",
+            "services": compose_services
+        }
+        with open(output_dir / "docker-compose.yml", "w") as f:
+            yaml.dump(compose_content, f, default_flow_style=False, sort_keys=False)
+
+    # Save test suites (one per service)
+    tests_dir = output_dir / "tests"
+    for unit in state.service_units:
+        if not unit.test_gen_output:
+            continue
         tests_dir.mkdir(exist_ok=True)
-
-        for tc in state.test_gen_output.test_cases:
-            test_file = tests_dir / f"{tc.name}.py"
+        for tc in unit.test_gen_output.test_cases:
+            test_file = tests_dir / f"{unit.service.name}_{tc.name}.py"
             test_file.write_text(tc.code, encoding="utf-8")
 
     # Save pipeline summary
@@ -207,8 +244,11 @@ CMD ["uvicorn", "generated:app", "--host", "0.0.0.0", "--port", "8000"]
         "source_path": state.source_path,
         "completed_at": datetime.now().isoformat(),
         "phase": state.current_phase.value,
-        "services_generated": len(state.refactoring_outputs),
-        "tests_generated": state.test_gen_output.total_tests if state.test_gen_output else 0,
+        "services_generated": len(state.service_units),
+        "tests_generated": sum(
+            u.test_gen_output.total_tests for u in state.service_units if u.test_gen_output
+        ),
+        "services_needing_review": [u.service.name for u in state.service_units if u.needs_human_review],
         "errors": state.errors,
         "approvals": state.human_approvals,
     }
