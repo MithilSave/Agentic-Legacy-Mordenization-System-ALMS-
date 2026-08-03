@@ -17,7 +17,7 @@ from pathlib import Path
 _DEFAULT_CONFIG = {
     "ollama": {
         "host": "http://localhost:11434",
-        "model": "qwen2.5:7b",
+        "model": "qwen2.5-coder:7b",
         "embedding_model": "nomic-embed-text",
     },
     "agents": {

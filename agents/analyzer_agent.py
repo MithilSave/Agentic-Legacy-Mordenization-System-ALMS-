@@ -1,7 +1,7 @@
 """
 Agents — Analyzer Agent
 =========================
-Codebase parsing & AST analysis using Ollama (qwen2.5:7b).
+Codebase parsing & AST analysis using Ollama (qwen2.5-coder:7b).
 Per CONTEXT.md §9 / IMPLEMENTATION_PLAN_v2.md §3:
 - AST-only extraction via tools/code_analysis.py
 - Ollama call with format="json", num_ctx=4096, temperature=0.05

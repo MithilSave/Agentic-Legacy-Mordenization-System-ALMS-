@@ -1489,7 +1489,7 @@ Replace the whole "Technology Stack" section with:
 - **Ollama** (local) — LLM inference, no cloud API calls
 
 ### LLM Model
-- **Primary**: `qwen2.5:7b` via Ollama (configurable in `config.yaml`)
+- **Primary**: `qwen2.5-coder:7b` via Ollama (configurable in `config.yaml`)
 
 ### Code Analysis & Generation
 - **AST Parsing**: Python's built-in `ast` module
@@ -1541,7 +1541,7 @@ Expected: no exception.
 - [ ] **Step 3: (Optional, requires Ollama running) Smoke-test the real demo path**
 
 Run: `python main.py --check`
-Expected: reports Ollama connection OK if `ollama serve` is running locally with `qwen2.5:7b` pulled. If Ollama isn't available in this environment, skip this step and note it in the handoff — it can't be verified without a live model.
+Expected: reports Ollama connection OK if `ollama serve` is running locally with `qwen2.5-coder:7b` pulled. If Ollama isn't available in this environment, skip this step and note it in the handoff — it can't be verified without a live model.
 
 - [ ] **Step 4: Review the diff against the spec one more time**
 
