@@ -5,13 +5,66 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, relationship
 from starlette.responses import JSONResponse
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 
-from .database import Base, engine, get_db
-from .models import OrderItemORM, OrderORM, ProductORM
-from .schemas import OrderCreateSchema, OrderItemSchema, OrderResponseSchema
+# Database engine setup
+DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(DATABASE_URL)
+
+Base = declarative_base()
+
+
+# SQLAlchemy ORM models
+
+
+class OrderORM(Base):
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer)
+    total_amount = Column(Float)
+    shipping_address = Column(String)
+    status = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+
+    items = relationship("OrderItemORM", back_populates="order")
+
+
+class OrderItemORM(Base):
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"))
+    product_id = Column(Integer, ForeignKey("products.id"))
+    quantity = Column(Integer)
+    unit_price = Column(Float)
+
+    order = relationship("OrderORM", back_populates="items")
+    product = relationship("ProductORM")
+
+
+class ProductORM(Base):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    stock_quantity = Column(Integer)
+    price = Column(Float)
+
+
+def get_db():
+    db = engine.connect()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -44,81 +97,26 @@ async def http_exception_handler(request, exc):
 # Pydantic models for request/response validation
 
 
-class OrderCreateSchema:
-    user_id: int
-    items: List[OrderItemSchema]
-    shipping_address: Optional[str] = None
-
-
-class OrderResponseSchema(OrderORM):
-    class Config:
-        orm_mode = True
-
-
-class OrderItemSchema:
+class OrderItemSchema(BaseModel):
     product_id: int
     quantity: int
     unit_price: float
 
 
-# SQLAlchemy ORM models
-
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-
-Base = declarative_base()
+class OrderCreateSchema(BaseModel):
+    user_id: int
+    items: List[OrderItemSchema]
+    shipping_address: Optional[str] = None
 
 
-class OrderORM(Base):
-    __tablename__ = "orders"
+class OrderResponseSchema(BaseModel):
+    id: int
+    user_id: int
+    total_amount: float
+    shipping_address: Optional[str] = None
+    status: str
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    total_amount = Column(Float)
-    shipping_address = Column(String)
-    status = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-
-    items = relationship("OrderItemORM", back_populates="order")
-
-
-class OrderItemORM(Base):
-    __tablename__ = "order_items"
-
-    id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id"))
-    product_id = Column(Integer, ForeignKey("products.id"))
-    quantity = Column(Integer)
-    unit_price = Column(Float)
-
-    order = relationship("OrderORM", back_populates="items")
-    product = relationship("ProductORM")
-
-
-class ProductORM(Base):
-    __tablename__ = "products"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    stock_quantity = Column(Integer)
-    price = Column(Float)
-
-
-# Database engine setup
-from sqlalchemy import create_engine
-
-DATABASE_URL = "sqlite:///./test.db"
-engine = create_engine(DATABASE_URL)
-
-
-def get_db():
-    db = engine.connect()
-    try:
-        yield db
-    finally:
-        db.close()
+    model_config = {"from_attributes": True}
 
 
 # FastAPI routes with comprehensive error handling and logging
