@@ -6,14 +6,14 @@
 # --- Ollama Connection ---
 ollama:
   host: "http://localhost:11434"
-  model: "qwen2.5-coder:7b"
+  model: "qwen3-coder:30b"
   embedding_model: "nomic-embed-text"
 
 # --- Per-Agent Model Settings ---
 # Different context windows to manage RAM (16GB laptop)
 agents:
   analyzer:
-    num_ctx: 4096
+    num_ctx: 2048
     temperature: 0.05
     description: "Codebase parsing & AST analysis"
     rag_categories:
@@ -21,7 +21,7 @@ agents:
     rag_top_k: 3
 
   architect:
-    num_ctx: 4096
+    num_ctx: 2048
     temperature: 0.1
     description: "DDD bounded context proposals"
     rag_categories:
@@ -29,7 +29,7 @@ agents:
     rag_top_k: 3
 
   refactoring:
-    num_ctx: 6144
+    num_ctx: 4096
     temperature: 0.2
     description: "FastAPI code generation"
     rag_categories:
@@ -38,7 +38,7 @@ agents:
     rag_top_k: 3
 
   test_gen:
-    num_ctx: 4096
+    num_ctx: 2048
     temperature: 0.15
     description: "Test suite generation"
     rag_categories:

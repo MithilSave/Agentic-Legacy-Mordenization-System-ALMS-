@@ -45,5 +45,3 @@ hypothesis>=6.0.0
 # --- Web Framework (for sample monolith) ---
 flask>=3.0.0
 
-# --- Utilities ---
-hashlib-additional>=1.0.0; python_version < "0"  # hashlib is stdlib, this is a no-op marker
