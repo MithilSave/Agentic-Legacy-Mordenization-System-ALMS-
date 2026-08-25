@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+audit.db
+cache_db/
+chroma_db/
+venv/
+.venv/

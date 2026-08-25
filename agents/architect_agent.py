@@ -15,7 +15,7 @@ import logging
 from typing import Dict, Any, Optional, List
 
 import networkx as nx
-import ollama as ollama_client
+from ollama import Client as OllamaClient
 
 from core.config import Config
 from core.constants import (
@@ -44,6 +44,7 @@ class ArchitectAgent:
         self.config = config or Config()
         self.retriever = retriever
         self.agent_config = self.config.get_agent_config("architect")
+        self.ollama = OllamaClient(host=self.config.ollama_host, timeout=1800.0)
 
     def design_architecture(self, analyzer_output: AnalyzerOutput) -> ArchitectOutput:
         """Propose microservice boundaries from the Analyzer's output.
@@ -159,8 +160,8 @@ class ArchitectAgent:
         )
 
         try:
-            response = ollama_client.chat(
-                model=self.config.ollama_model,
+            response = self.ollama.chat(
+                model=self.agent_config["model"],
                 messages=[
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": (
@@ -176,6 +177,21 @@ class ArchitectAgent:
                     "num_ctx": self.agent_config["num_ctx"],
                     "temperature": self.agent_config["temperature"],
                 },
+            )
+
+            # ── Token Usage Logging ──
+            prompt_tokens = response.get("prompt_eval_count", 0)
+            completion_tokens = response.get("eval_count", 0)
+            total_tokens = prompt_tokens + completion_tokens
+            total_duration_ms = response.get("total_duration", 0) / 1e6  # ns → ms
+            eval_duration_ms = response.get("eval_duration", 0) / 1e6
+            tokens_per_sec = (completion_tokens / (eval_duration_ms / 1000.0)) if eval_duration_ms > 0 else 0
+            logger.info(
+                f"[TOKENS] Architect LLM call — "
+                f"Prompt: {prompt_tokens}, Completion: {completion_tokens}, "
+                f"Total: {total_tokens} | "
+                f"Speed: {tokens_per_sec:.1f} tok/s | "
+                f"Duration: {total_duration_ms:.0f}ms"
             )
 
             content = response.get("message", {}).get("content", "{}")
