@@ -78,8 +78,8 @@ graph TD
 ### 1. Ollama Installation & Setup
 Download and install [Ollama](https://ollama.com). Pull the required models:
 ```bash
-# Pull the LLM (e.g. llama3 or deepseek-r1 as configured in config.yaml)
-ollama pull llama3
+# Pull the LLM (e.g. qwen3-coder:30b as configured in config.yaml)
+ollama pull qwen3-coder:30b
 
 # Pull the embedding model used for the RAG database
 ollama pull nomic-embed-text
@@ -127,10 +127,10 @@ python main.py --skip-hitl <path_to_python_project>
 
 ## Customization
 
-Customize agent temperatures, model choices, RAG thresholds, or context windows in [config.yaml](file:///c:/Users/krish/OneDrive/Documents/GitHub/Capston/config.yaml):
+Customize agent temperatures, model choices, RAG thresholds, or context windows in [config.yaml](./config.yaml):
 ```yaml
-models:
-  llm: "llama3"
-  embeddings: "nomic-embed-text"
-  api_base: "http://localhost:11434"
+ollama:
+  host: "http://localhost:11434"
+  model: "qwen3-coder:30b"
+  embedding_model: "nomic-embed-text"
 ```

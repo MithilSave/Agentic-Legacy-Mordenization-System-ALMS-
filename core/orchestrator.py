@@ -167,13 +167,12 @@ class PipelineOrchestrator:
         builder.add_node("hitl_analyze", self._node_hitl_analyze)
         builder.add_node("architect", self._node_architect)
         builder.add_node("hitl_architect", self._node_hitl_architect)
-
-        # Sequential processing — critical for RAM-constrained CPU-only setups.
-        # The original parallel Send fan-out launched N concurrent LLM calls,
-        # which caused Ollama to thrash on 16GB RAM with the 30B model.
-        builder.add_node("refactor_and_test_all", self._node_refactor_and_test_all)
-
-        builder.add_node("hitl_final", self._node_hitl_final)
+        
+        # Subgraph node for parallel fan-out
+        service_subgraph = self._build_service_graph()
+        builder.add_node("process_service", service_subgraph)
+        
+        builder.add_node("join", self._node_join)
 
         builder.add_edge(START, "analyze")
         builder.add_edge("analyze", "hitl_analyze")
@@ -197,20 +196,22 @@ class PipelineOrchestrator:
                 return END
             if route == "reject":
                 return "architect"
-            return "refactor_and_test_all"
+            return self._dispatch_refactor_sends(state)
 
         builder.add_conditional_edges(
             "hitl_architect",
             _route_after_architect_hitl,
-            ["architect", "refactor_and_test_all", END],
+            ["architect", "process_service", END],
         )
 
-        builder.add_edge("refactor_and_test_all", "hitl_final")
+        builder.add_edge("process_service", "join")
 
+        builder.add_node("hitl_final", self._node_hitl_final)
+        builder.add_edge("join", "hitl_final")
         builder.add_conditional_edges(
             "hitl_final",
             self._route_hitl_final,
-            ["refactor_and_test_all", END],
+            ["process_service", END],
         )
 
         return builder.compile()
@@ -492,7 +493,6 @@ class PipelineOrchestrator:
         return {"service_units": [unit]}
 
     def _node_join(self, gstate: GraphState) -> GraphState:
-        """Legacy join node — kept for compatibility but no longer wired."""
         state = gstate["state"]
         state.service_units = gstate["service_units"]
         state.current_phase = AgentPhase.TESTING
@@ -505,120 +505,6 @@ class PipelineOrchestrator:
             "tests_generated": total_tests,
         })
         return {"state": state}
-
-    def _node_refactor_and_test_all(self, gstate: GraphState) -> GraphState:
-        """Process all services SEQUENTIALLY — one LLM call at a time.
-
-        This replaces the parallel Send fan-out which launched N concurrent
-        Ollama requests, causing fatal RAM thrashing on CPU-only setups
-        with the 30B model.
-        """
-        state = gstate["state"]
-        state.current_phase = AgentPhase.REFACTORING
-        all_units = []
-
-        services = state.architect_output.proposed_services
-        total = len(services)
-
-        for idx, svc in enumerate(services, 1):
-            logger.info(f"Processing service {idx}/{total}: {svc.name}")
-
-            # ── Refactor with retry loop ──
-            refactoring_output = None
-            compile_attempts = 0
-            needs_review = False
-
-            for attempt in range(1, self.config.max_retries + 1):
-                compile_attempts = attempt
-                self._emit("refactoring_service", {"service": svc.name, "attempt": attempt})
-                start = time.time()
-
-                try:
-                    refactoring_output = self.refactoring.refactor_service(svc, state.source_code)
-                except Exception as e:
-                    logger.error(f"Refactoring failed for {svc.name} (attempt {attempt}): {e}")
-                    self.audit.log_agent_action(
-                        "refactoring", f"{svc.name} raised an exception (attempt {attempt})",
-                        phase="refactoring", success=False, error_message=str(e),
-                    )
-                    continue
-
-                duration = int((time.time() - start) * 1000)
-                self.audit.log_agent_action(
-                    "refactoring", f"Generated {svc.name} (attempt {attempt})",
-                    phase="refactoring", duration_ms=duration,
-                    details={"py_compile_passed": refactoring_output.py_compile_passed},
-                )
-
-                if refactoring_output.py_compile_passed:
-                    break
-                else:
-                    logger.warning(
-                        f"py_compile failed for {svc.name}, "
-                        f"attempt {attempt}/{self.config.max_retries}"
-                    )
-
-            # Check if we exhausted retries
-            if not refactoring_output or not refactoring_output.py_compile_passed:
-                needs_review = True
-                self.audit.log_agent_action(
-                    "refactoring",
-                    f"{svc.name} exceeded retry limit ({compile_attempts} attempts)",
-                    phase="refactoring", success=False,
-                    error_message="py_compile failed repeatedly",
-                )
-
-            # ── Test generation (if refactoring succeeded) ──
-            test_output = None
-            if refactoring_output and not needs_review:
-                logger.info(f"Generating tests for {svc.name}...")
-                start = time.time()
-                try:
-                    test_output = self.test_gen.generate_tests(
-                        refactoring_output, state.source_code
-                    )
-                    duration = int((time.time() - start) * 1000)
-                    self.audit.log_agent_action(
-                        "test_gen", f"Generated tests for {svc.name}",
-                        phase="testing", duration_ms=duration,
-                        details={"tests": test_output.total_tests},
-                    )
-                except Exception as e:
-                    logger.error(f"Test generation failed for {svc.name}: {e}")
-                    self.audit.log_agent_action(
-                        "test_gen", f"{svc.name} test generation failed",
-                        phase="testing", success=False, error_message=str(e),
-                    )
-                    needs_review = True
-
-            unit = ServiceUnit(
-                service=svc,
-                refactoring_output=refactoring_output,
-                test_gen_output=test_output,
-                compile_attempts=compile_attempts,
-                needs_human_review=needs_review,
-                status="done" if not needs_review else "failed",
-            )
-            all_units.append(unit)
-            logger.info(
-                f"Service {idx}/{total} '{svc.name}' — "
-                f"status={'DONE' if not needs_review else 'NEEDS REVIEW'}"
-            )
-
-        # Update state
-        state.service_units = all_units
-        state.current_phase = AgentPhase.TESTING
-
-        total_tests = sum(
-            u.test_gen_output.total_tests for u in all_units if u.test_gen_output
-        )
-        self._emit("phase_complete", {
-            "phase": "testing",
-            "services_processed": len(all_units),
-            "tests_generated": total_tests,
-        })
-
-        return {"state": state, "service_units": all_units}
 
     def _node_hitl_final(self, gstate: GraphState) -> GraphState:
         state = gstate["state"]
@@ -641,7 +527,7 @@ class PipelineOrchestrator:
             return END
         if route == "approve":
             return END
-        return "refactor_and_test_all"
+        return self._dispatch_refactor_sends(state)
     # ──────────────────────────────────────────────
     # HITL Utilities
     # ──────────────────────────────────────────────

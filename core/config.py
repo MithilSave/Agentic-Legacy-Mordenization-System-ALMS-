@@ -17,7 +17,7 @@ from pathlib import Path
 _DEFAULT_CONFIG = {
     "ollama": {
         "host": "http://localhost:11434",
-        "model": "qwen3-coder:30b",
+        "model": "qwen2.5-coder:7b",
         "embedding_model": "nomic-embed-text",
     },
     "agents": {
@@ -138,7 +138,6 @@ class Config:
         return {
             "num_ctx": agent_cfg.get("num_ctx", 4096),
             "temperature": agent_cfg.get("temperature", 0.1),
-            "model": agent_cfg.get("model", self.ollama_model),
             "rag_categories": agent_cfg.get("rag_categories", []),
             "rag_top_k": agent_cfg.get("rag_top_k", 3),
             "description": agent_cfg.get("description", ""),

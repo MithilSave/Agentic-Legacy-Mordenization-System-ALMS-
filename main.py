@@ -273,9 +273,7 @@ def check_ollama():
         dashboard.console.print(f"  [bright_green]  Available models: {', '.join(model_names)}[/]")
 
         # Check for required models
-        from core.config import Config
-        config = Config()
-        required = [config.ollama_model]
+        required = ["qwen2.5-coder:7b"]
         for req in required:
             found = any(req in name for name in model_names)
             status = "✓" if found else "✗"
