@@ -1,0 +1,115 @@
+{
+  "proposed_services": [
+    {
+      "name": "UserManagement",
+      "bounded_context": "User Management",
+      "modules": [
+        "users",
+        "user",
+        "UserProfile",
+        "role_hierarchy"
+      ],
+      "tables": [
+        "users",
+        "user_profiles",
+        "roles"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.9,
+      "reason": "High cohesion in user-related entities and low coupling with other services"
+    },
+    {
+      "name": "OrderProcessing",
+      "bounded_context": "Order Processing",
+      "modules": [
+        "orders",
+        "Order",
+        "OrderItem",
+        "valid_transitions",
+        "validated_items"
+      ],
+      "tables": [
+        "orders",
+        "order_items",
+        "order_status"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.85,
+      "reason": "Cohesion in order-related entities and low coupling with other services"
+    },
+    {
+      "name": "PaymentProcessing",
+      "bounded_context": "Payment Processing",
+      "modules": [
+        "payments",
+        "Payment",
+        "Transaction",
+        "Refund"
+      ],
+      "tables": [
+        "payments",
+        "transactions",
+        "refunds"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.8,
+      "reason": "Cohesion in payment-related entities and low coupling with other services"
+    },
+    {
+      "name": "DatabaseService",
+      "bounded_context": "Data Storage",
+      "modules": [
+        "database",
+        "conn",
+        "_connection"
+      ],
+      "tables": [
+        "users",
+        "user_profiles",
+        "roles",
+        "orders",
+        "order_items",
+        "order_status",
+        "payments",
+        "transactions",
+        "refunds"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.75,
+      "reason": "Database service owns all tables and handles inter-service data access"
+    }
+  ],
+  "inter_service_patterns": {
+    "UserManagement": {
+      "OrderProcessing": "async",
+      "PaymentProcessing": "async"
+    },
+    "OrderProcessing": {
+      "UserManagement": "async",
+      "PaymentProcessing": "async"
+    },
+    "PaymentProcessing": {
+      "UserManagement": "async",
+      "OrderProcessing": "async"
+    }
+  },
+  "data_ownership": {
+    "users": "UserManagement",
+    "user_profiles": "UserManagement",
+    "roles": "UserManagement",
+    "orders": "OrderProcessing",
+    "order_items": "OrderProcessing",
+    "order_status": "OrderProcessing",
+    "payments": "PaymentProcessing",
+    "transactions": "PaymentProcessing",
+    "refunds": "PaymentProcessing"
+  }
+}
