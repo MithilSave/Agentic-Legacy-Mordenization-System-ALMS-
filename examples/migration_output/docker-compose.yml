@@ -1,22 +1,47 @@
 version: '3.8'
 services:
-  usermanagement:
-    build: ./UserManagement
+  payments-request-service:
+    build: ./payments-request-service
     ports:
     - 8000:8000
     restart: always
-  orderprocessing:
-    build: ./OrderProcessing
+  datetime-hashlib-service:
+    build: ./datetime-hashlib-service
     ports:
     - 8001:8000
     restart: always
-  paymentprocessing:
-    build: ./PaymentProcessing
+  _active_sessions-users-service:
+    build: ./_active_sessions-users-service
     ports:
     - 8002:8000
     restart: always
-  databaseservice:
-    build: ./DatabaseService
+  role_hierarchy-kwargs-service:
+    build: ./role_hierarchy-kwargs-service
     ports:
     - 8003:8000
+    restart: always
+  validated_items-orders-service:
+    build: ./validated_items-orders-service
+    ports:
+    - 8004:8000
+    restart: always
+  order-orders-service:
+    build: ./order-orders-service
+    ports:
+    - 8005:8000
+    restart: always
+  sqlite3-cursor-service:
+    build: ./sqlite3-cursor-service
+    ports:
+    - 8006:8000
+    restart: always
+  _connection-database-service:
+    build: ./_connection-database-service
+    ports:
+    - 8007:8000
+    restart: always
+  models-service:
+    build: ./models-service
+    ports:
+    - 8008:8000
     restart: always
