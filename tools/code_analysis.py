@@ -290,6 +290,13 @@ def build_dependency_graph(code_structure: Dict[str, Any]) -> nx.DiGraph:
     """
     G = nx.DiGraph()
 
+    # Known external (3rd-party) top-level module names, so genuine library
+    # coupling is kept while builtins / stdlib-method / local-variable calls
+    # are NOT added as graph nodes (they are not architectural dependencies).
+    known_external = set(get_external_dependencies(code_structure))
+    known_class_names = {c["name"] for c in code_structure["classes"]}
+    known_class_names |= {c["id"] for c in code_structure["classes"]}
+
     # Add module nodes
     for module in code_structure["modules"]:
         G.add_node(module["name"], type="module", file=module["file"])
@@ -306,18 +313,24 @@ def build_dependency_graph(code_structure: Dict[str, Any]) -> nx.DiGraph:
             target = _resolve_call(call, func["module"], code_structure)
             if target:
                 G.add_edge(func["id"], target, type="internal_call", confidence=0.9)
-            else:
-                # External or unresolved call
-                G.add_edge(func["id"], call, type="external_call", confidence=0.7)
+            elif call.split(".")[0] in known_external:
+                # Genuine 3rd-party library call — keep the coupling signal
+                G.add_edge(func["id"], call.split(".")[0], type="external_call", confidence=0.7)
+            # else: builtin / stdlib method / local-variable method / unknown
+            #       — dropped so it does not pollute coupling & communities
 
     # Add class nodes
     for cls in code_structure["classes"]:
         G.add_node(cls["id"], type="class", module=cls["module"],
                    methods=cls["methods"])
 
-        # Inheritance edges
+        # Inheritance edges — only to entities we actually know about
         for base in cls.get("bases", []):
-            G.add_edge(cls["id"], base, type="inheritance", confidence=0.95)
+            base_head = base.split(".")[0]
+            if base in known_class_names or base.split(".")[-1] in known_class_names:
+                G.add_edge(cls["id"], base, type="inheritance", confidence=0.95)
+            elif base_head in known_external:
+                G.add_edge(cls["id"], base_head, type="inheritance", confidence=0.95)
 
     # Add import edges (module-level dependencies)
     for imp in code_structure["imports"]:
