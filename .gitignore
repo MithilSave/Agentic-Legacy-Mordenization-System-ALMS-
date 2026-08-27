@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+
+# Generated pipeline output (regenerable via `python main.py`)
+examples/migration_output/
+
+# Runtime state (regenerable)
+chroma_db/
+cache_db/
+audit.db

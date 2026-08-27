@@ -64,6 +64,11 @@ class VectorStore:
 
         Returns:
             List of embedding vectors
+
+        Raises:
+            RuntimeError: if the embedding backend errors or returns an
+                empty/malformed response. Never substitutes a zero vector —
+                a silent zero would corrupt both indexing and query ranking.
         """
         embeddings = []
         for text in texts:
@@ -72,15 +77,22 @@ class VectorStore:
                     model=self.config.embedding_model,
                     input=text,
                 )
-                # ollama.embed returns {"embeddings": [[...]]}
-                if response and "embeddings" in response:
-                    embeddings.append(response["embeddings"][0])
-                else:
-                    logger.warning(f"Empty embedding response for text: {text[:50]}...")
-                    embeddings.append([0.0] * 768)  # nomic-embed-text is 768-dim
             except Exception as e:
                 logger.error(f"Embedding failed: {e}")
-                embeddings.append([0.0] * 768)
+                raise RuntimeError(
+                    f"Embedding backend '{self.config.embedding_model}' failed: {e}"
+                ) from e
+
+            # ollama.embed returns {"embeddings": [[...]]}
+            vector = None
+            if response and response.get("embeddings"):
+                vector = response["embeddings"][0]
+            if not vector:
+                raise RuntimeError(
+                    f"Empty embedding response for text: {text[:50]!r} "
+                    f"(model '{self.config.embedding_model}')"
+                )
+            embeddings.append(vector)
 
         return embeddings
 
@@ -143,8 +155,14 @@ class VectorStore:
         if category_filter:
             where_filter = {"category": category_filter}
 
-        # Generate query embedding
-        query_embedding = self.embed_texts([query_text])[0]
+        # Generate query embedding. A retrieval failure degrades to "no
+        # results" (logged) rather than aborting the caller; indexing, by
+        # contrast, hard-fails in add_documents so bad vectors never persist.
+        try:
+            query_embedding = self.embed_texts([query_text])[0]
+        except RuntimeError as e:
+            logger.error(f"Query embedding failed: {e}")
+            return []
 
         try:
             results = self.collection.query(

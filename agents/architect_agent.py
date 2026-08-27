@@ -266,16 +266,24 @@ class ArchitectAgent:
             groups[comm_id].append(node_id)
 
         services = []
-        for comm_id, node_ids in groups.items():
-            # Get the modules in this community
-            modules = list(set(
+        used_names = set()
+        for comm_id in sorted(groups):
+            node_ids = groups[comm_id]
+            # Get the modules in this community — sorted for deterministic names
+            modules = sorted(set(
                 nid.split(".")[0] for nid in node_ids if "." in nid
             ))
 
             if not modules:
                 continue
 
-            service_name = "-".join(modules[:2]) + "-service"
+            base_name = "-".join(modules[:2]) + "-service"
+            service_name = base_name
+            suffix = 2
+            while service_name in used_names:
+                service_name = f"{base_name}-{suffix}"
+                suffix += 1
+            used_names.add(service_name)
 
             services.append(ServiceBoundary(
                 name=service_name,
