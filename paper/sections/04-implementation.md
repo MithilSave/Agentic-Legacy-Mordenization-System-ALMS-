@@ -14,10 +14,10 @@ rag.relevance_threshold 0.70; chunk_size 500, chunk_overlap 100. Re-confirm befo
 
 ## Implementation
 
-ALMS is implemented in Python 3.11 in roughly 4k lines across `core/`, `agents/`,
-`rag/`, `tools/`, `safety/`, and `storage/`. It has no cloud dependencies and is
-designed to run on a single commodity laptop; the reference configuration targets a
-16 GB, CPU-only machine.
+ALMS is implemented in Python 3.11 in roughly 5k lines across `core/`, `agents/`,
+`rag/`, `tools/`, `safety/`, `storage/`, and `ui/`. It has no cloud dependencies and
+is designed to run on a single commodity laptop; the reference configuration targets
+a 16 GB, CPU-only machine.
 
 ### Orchestration and models
 
