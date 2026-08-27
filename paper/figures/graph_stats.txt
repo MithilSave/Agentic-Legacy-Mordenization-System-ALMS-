@@ -1,0 +1,9 @@
+source examples/sample_monolith
+nodes_before 134
+edges_before 251
+hotspots_before 6
+nodes_after 75
+edges_after 104
+hotspots_after 2
+node_reduction_pct 44.0
+edge_reduction_pct 58.6

@@ -78,8 +78,8 @@ graph TD
 ### 1. Ollama Installation & Setup
 Download and install [Ollama](https://ollama.com). Pull the required models:
 ```bash
-# Pull the LLM (e.g. qwen3-coder:30b as configured in config.yaml)
-ollama pull qwen3-coder:30b
+# Pull the LLM (qwen2.5-coder:7b — matches config.yaml; runs CPU-only on ~16 GB RAM)
+ollama pull qwen2.5-coder:7b
 
 # Pull the embedding model used for the RAG database
 ollama pull nomic-embed-text
@@ -131,6 +131,6 @@ Customize agent temperatures, model choices, RAG thresholds, or context windows 
 ```yaml
 ollama:
   host: "http://localhost:11434"
-  model: "qwen3-coder:30b"
+  model: "qwen2.5-coder:7b"
   embedding_model: "nomic-embed-text"
 ```

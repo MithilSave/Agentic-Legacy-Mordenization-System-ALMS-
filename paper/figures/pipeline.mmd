@@ -1,0 +1,45 @@
+%% ALMS end-to-end migration pipeline (paper Figure 1).
+%% Render: https://mermaid.live  or  npx @mermaid-js/mermaid-cli -i pipeline.mmd -o pipeline.pdf
+flowchart TD
+    SRC["Legacy Python monolith<br/>(source directory)"] --> AN
+
+    subgraph DET["Deterministic (no LLM)"]
+        AN["Analyzer<br/>AST + call graph + Louvain-ready graph"]
+        AN --> HS["Coupling hotspots + cycles<br/>builtin / stdlib calls filtered out"]
+    end
+
+    subgraph LLM["Local LLM agents (Ollama, CPU)"]
+        AR["Architect<br/>Louvain communities to ServiceBoundary[]"]
+        RF["Refactoring agent<br/>FastAPI + Pydantic + SQLAlchemy"]
+        TG["Test-Gen agent<br/>pytest + hypothesis + shadow tests"]
+    end
+
+    subgraph RAG["Local RAG (ChromaDB + nomic-embed-text)"]
+        KB["Pattern knowledge base<br/>DDD / FastAPI / security / testing / refactoring"]
+    end
+
+    HS --> AR
+    KB -.retrieval.-> AN
+    KB -.retrieval.-> AR
+    KB -.retrieval.-> RF
+    KB -.retrieval.-> TG
+
+    AN --> G1{{"HITL gate 1<br/>after_analyze"}}
+    G1 -->|reject| AN
+    G1 -->|approve| AR
+    AR --> G2{{"HITL gate 2<br/>after_architect"}}
+    G2 -->|reject| AR
+    G2 -->|approve| FAN["fan-out: one branch per proposed service"]
+
+    FAN --> RF
+    RF --> V{"py_compile"}
+    V -->|fail, attempts < max| RF
+    V -->|fail, attempts = max| NR["mark needs_human_review"]
+    V -->|pass| TG
+    TG --> JOIN["join branches"]
+    NR --> JOIN
+    JOIN --> G3{{"HITL gate 3<br/>after_test_gen"}}
+    G3 -->|reject| FAN
+    G3 -->|approve| OUT["Output writer"]
+
+    OUT --> ART["examples/migration_output/<br/>per-service generated.py + Dockerfile + requirements.txt<br/>docker-compose.yml + tests/ + *_output.json"]

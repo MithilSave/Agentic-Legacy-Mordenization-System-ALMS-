@@ -1,0 +1,33 @@
+%% ALMS LangGraph StateGraph (paper Figure 2).
+%% Mirrors core/orchestrator.py::_build_graph and ::_build_service_graph.
+%% Render: https://mermaid.live  or  npx @mermaid-js/mermaid-cli -i statemachine.mmd -o statemachine.pdf
+flowchart TD
+    START((START)) --> analyze
+    analyze --> hitl_analyze
+    hitl_analyze -->|approve| architect
+    hitl_analyze -->|reject| analyze
+    hitl_analyze -->|fail| ENDN((END))
+
+    architect --> hitl_architect
+    hitl_architect -->|reject| architect
+    hitl_architect -->|fail| ENDN
+    hitl_architect -->|approve<br/>Send per service| process_service
+
+    subgraph SG["process_service (per-service subgraph, run in parallel)"]
+        s_start((START)) --> refactor_service
+        refactor_service --> validate_service
+        validate_service -->|"retry (attempts under max_retries)"| refactor_service
+        validate_service -->|needs_review| mark_needs_review
+        validate_service -->|pass| test_gen_service
+        mark_needs_review --> s_end((END))
+        test_gen_service --> s_end
+    end
+
+    process_service --> join
+    join --> hitl_final
+    hitl_final -->|approve| ENDN
+    hitl_final -->|fail| ENDN
+    hitl_final -->|reject<br/>re-dispatch Sends| process_service
+
+    %% state channel note
+    join -. "service_units merged by service.name<br/>(_replace_by_service_name reducer)" .- process_service
