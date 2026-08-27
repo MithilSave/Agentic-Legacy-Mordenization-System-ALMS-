@@ -160,6 +160,81 @@ def run_pipeline(source_path: str, skip_hitl: bool = False):
         orchestrator.cleanup()
 
 
+_DOCKERFILE_TEMPLATE = """FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "generated:app", "--host", "0.0.0.0", "--port", "8000"]
+"""
+
+_REQUIREMENTS = "fastapi\nuvicorn[standard]\nsqlalchemy\npydantic\npython-multipart\n"
+
+
+def _stub_generated(service_name: str, reason: str) -> str:
+    """Minimal but runnable FastAPI app so the container always boots.
+
+    Used when the Refactoring Agent produced no usable code (e.g. the LLM
+    was unavailable or returned an empty response). Keeps docker-compose
+    valid and flags the service for manual completion.
+    """
+    return (
+        '"""AUTO-GENERATED STUB — replace with the real service implementation.\n\n'
+        f"Service : {service_name}\n"
+        f"Reason  : {reason}\n"
+        '"""\n'
+        "from fastapi import FastAPI\n\n"
+        f'app = FastAPI(title={service_name!r}, description="STUB — pending refactor")\n\n\n'
+        '@app.get("/health")\n'
+        "def health() -> dict:\n"
+        f'    return {{"status": "ok", "service": {service_name!r}, "stub": True}}\n'
+    )
+
+
+def _has_asgi_app(code: str) -> bool:
+    """True if the module defines a module-level `app` ASGI callable."""
+    import re
+    return bool(re.search(r"^\s*app\s*=\s*FastAPI\s*\(", code, re.MULTILINE))
+
+
+def _ensure_entrypoint(service_dir, service_name: str, gen_files, reason_if_stub: str):
+    """Guarantee <service_dir>/generated.py exists and exposes `app`.
+
+    The Dockerfile always launches `uvicorn generated:app`, so every folder
+    referenced by docker-compose MUST contain a generated.py defining `app`.
+
+    Returns a short status string: "generated" | "adapted" | "stub".
+    """
+    from pathlib import Path
+
+    service_dir = Path(service_dir)
+    generated = service_dir / "generated.py"
+
+    # 1. Refactoring agent already emitted a usable generated.py
+    if generated.exists() and _has_asgi_app(generated.read_text(encoding="utf-8")):
+        return "generated"
+
+    # 2. Some other emitted .py file defines `app` — re-export it via generated.py
+    py_files = [
+        f for f in (gen_files or [])
+        if f.filename.endswith(".py") and f.filename != "generated.py"
+    ]
+    for f in py_files:
+        if _has_asgi_app(f.content):
+            module = f.filename[:-3].replace("-", "_").replace("/", ".")
+            generated.write_text(
+                f"# Auto-generated entrypoint shim -> {f.filename}\n"
+                f"from {module} import app  # noqa: F401\n",
+                encoding="utf-8",
+            )
+            return "adapted"
+
+    # 3. Nothing runnable — write a stub so the container still boots
+    generated.write_text(_stub_generated(service_name, reason_if_stub), encoding="utf-8")
+    return "stub"
+
+
 def _save_outputs(state, source_path: str):
     """Save pipeline outputs to files."""
     import json
@@ -180,43 +255,54 @@ def _save_outputs(state, source_path: str):
 
     # Initialize docker-compose structure
     compose_services = {}
+    stub_services = []
     base_port = 8000
 
-    # Save generated service code
+    # Save generated service code — every service in state gets a folder,
+    # a guaranteed generated.py entrypoint, a Dockerfile and a compose entry.
     for unit in state.service_units:
-        if not unit.refactoring_output:
-            continue
         refactoring_output = unit.refactoring_output
-        service_dir = output_dir / refactoring_output.service_name
+        service_name = (
+            refactoring_output.service_name
+            if refactoring_output else unit.service.name
+        )
+        gen_files = refactoring_output.files if refactoring_output else []
+
+        service_dir = output_dir / service_name
         service_dir.mkdir(exist_ok=True)
 
-        for gen_file in refactoring_output.files:
-            file_path = service_dir / gen_file.filename
-            file_path.write_text(gen_file.content, encoding="utf-8")
-            
-        # Add Dockerfile
-        dockerfile_content = f"""FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "generated:app", "--host", "0.0.0.0", "--port", "8000"]
-"""
-        (service_dir / "Dockerfile").write_text(dockerfile_content, encoding="utf-8")
-        
-        # Add requirements.txt
-        reqs_content = "fastapi\nuvicorn\nsqlalchemy\npydantic\n"
-        (service_dir / "requirements.txt").write_text(reqs_content, encoding="utf-8")
-        
-        # Add to docker-compose
-        service_name_slug = refactoring_output.service_name.lower().replace(" ", "-")
+        for gen_file in gen_files:
+            dest = service_dir / gen_file.filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(gen_file.content, encoding="utf-8")
+
+        # Guarantee uvicorn's `generated:app` target exists in this folder
+        if not refactoring_output:
+            reason = "Refactoring Agent produced no output for this service"
+        elif not gen_files:
+            reason = "Refactoring Agent returned zero files (LLM unavailable or empty response)"
+        else:
+            reason = "No emitted module defined a FastAPI `app`"
+        entry_status = _ensure_entrypoint(service_dir, service_name, gen_files, reason)
+        if entry_status == "stub":
+            stub_services.append(service_name)
+
+        (service_dir / "Dockerfile").write_text(_DOCKERFILE_TEMPLATE, encoding="utf-8")
+        (service_dir / "requirements.txt").write_text(_REQUIREMENTS, encoding="utf-8")
+
+        service_name_slug = service_name.lower().replace(" ", "-").replace("_", "-")
         compose_services[service_name_slug] = {
-            "build": f"./{refactoring_output.service_name}",
+            "build": f"./{service_name}",
             "ports": [f"{base_port}:8000"],
-            "restart": "always"
+            "restart": "always",
         }
         base_port += 1
+
+    if stub_services:
+        print(
+            "\n  ⚠ Stub generated.py written for services with no runnable code: "
+            + ", ".join(stub_services)
+        )
 
     # Generate docker-compose.yml
     if compose_services:
@@ -249,6 +335,7 @@ CMD ["uvicorn", "generated:app", "--host", "0.0.0.0", "--port", "8000"]
             u.test_gen_output.total_tests for u in state.service_units if u.test_gen_output
         ),
         "services_needing_review": [u.service.name for u in state.service_units if u.needs_human_review],
+        "stub_services": stub_services,
         "errors": state.errors,
         "approvals": state.human_approvals,
     }
