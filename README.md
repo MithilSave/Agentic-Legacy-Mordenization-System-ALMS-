@@ -14,6 +14,7 @@
 - **Retro DOS Terminal UI**: Draws interactive dashboard interfaces using the `rich` library, complete with ascii art banners, execution progress tables, and custom status updates.
 - **Security & Safety checks**: Integrates security check mechanisms (e.g., Bandit hook configuration) and isolates output generation.
 - **Automated Test Generation & Shadow Testing**: Writes `pytest` test suites and executes shadow parity tests comparing the inputs/outputs of legacy code against generated FastAPI services.
+- **Docker & API Gateway Generation**: Outputs production-ready, multi-stage Dockerfiles, a centralized Nginx API Gateway, and a fully wired `docker-compose.yml` for immediate local deployment.
 
 ---
 
@@ -78,8 +79,8 @@ graph TD
 ### 1. Ollama Installation & Setup
 Download and install [Ollama](https://ollama.com). Pull the required models:
 ```bash
-# Pull the LLM (e.g. qwen3-coder:30b as configured in config.yaml)
-ollama pull qwen3-coder:30b
+# Pull the LLM (as configured in config.yaml)
+ollama pull qwen2.5-coder:14b
 
 # Pull the embedding model used for the RAG database
 ollama pull nomic-embed-text
@@ -131,6 +132,6 @@ Customize agent temperatures, model choices, RAG thresholds, or context windows 
 ```yaml
 ollama:
   host: "http://localhost:11434"
-  model: "qwen3-coder:30b"
+  model: "qwen2.5-coder:14b"
   embedding_model: "nomic-embed-text"
 ```
