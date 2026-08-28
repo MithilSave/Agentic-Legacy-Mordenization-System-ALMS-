@@ -6,7 +6,7 @@
 # --- Ollama Connection ---
 ollama:
   host: "http://localhost:11434"
-  model: "qwen2.5-coder:7b"
+  model: "qwen2.5-coder:14b"
   embedding_model: "nomic-embed-text"
 
 # --- Per-Agent Model Settings ---
@@ -35,7 +35,8 @@ agents:
     rag_categories:
       - "fastapi_patterns"
       - "security_patterns"
-    rag_top_k: 3
+      - "docker_patterns"
+    rag_top_k: 5
 
   test_gen:
     num_ctx: 4096
@@ -90,3 +91,4 @@ knowledge_base:
     - "ddd_patterns"
     - "security_patterns"
     - "testing_patterns"
+    - "docker_patterns"

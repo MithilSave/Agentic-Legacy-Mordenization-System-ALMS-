@@ -1,0 +1,150 @@
+services:
+  usermanagement:
+    build:
+      context: ./UserManagement
+      dockerfile: Dockerfile
+    container_name: usermanagement
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: usermanagement
+      LOG_LEVEL: INFO
+    volumes:
+    - usermanagement-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  orderprocessing:
+    build:
+      context: ./OrderProcessing
+      dockerfile: Dockerfile
+    container_name: orderprocessing
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: orderprocessing
+      LOG_LEVEL: INFO
+    volumes:
+    - orderprocessing-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  paymentprocessing:
+    build:
+      context: ./PaymentProcessing
+      dockerfile: Dockerfile
+    container_name: paymentprocessing
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: paymentprocessing
+      LOG_LEVEL: INFO
+    volumes:
+    - paymentprocessing-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  api-gateway:
+    image: nginx:alpine
+    container_name: api-gateway
+    ports:
+    - 8080:80
+    volumes:
+    - ./api-gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      usermanagement:
+        condition: service_healthy
+      orderprocessing:
+        condition: service_healthy
+      paymentprocessing:
+        condition: service_healthy
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - wget
+      - --quiet
+      - --tries=1
+      - --spider
+      - http://localhost:80/health
+      interval: 15s
+      timeout: 5s
+      retries: 3
+networks:
+  microservices:
+    driver: bridge
+volumes:
+  usermanagement-data: null
+  orderprocessing-data: null
+  paymentprocessing-data: null

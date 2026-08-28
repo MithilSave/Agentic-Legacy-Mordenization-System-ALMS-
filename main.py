@@ -236,8 +236,9 @@ def _ensure_entrypoint(service_dir, service_name: str, gen_files, reason_if_stub
 
 
 def _save_outputs(state, source_path: str):
-    """Save pipeline outputs to files."""
+    """Save pipeline outputs to files with production-ready Docker artifacts."""
     import json
+    import yaml
     from datetime import datetime
 
     output_dir = Path(source_path).parent / "migration_output"
@@ -256,8 +257,10 @@ def _save_outputs(state, source_path: str):
     # Initialize docker-compose structure
     compose_services = {}
     stub_services = []
-    base_port = 8000
+    base_port = 8001
+    service_names_for_gateway = []
 
+    # ── Save generated service code ──
     # Save generated service code — every service in state gets a folder,
     # a guaranteed generated.py entrypoint, a Dockerfile and a compose entry.
     for unit in state.service_units:
@@ -271,10 +274,14 @@ def _save_outputs(state, source_path: str):
         service_dir = output_dir / service_name
         service_dir.mkdir(exist_ok=True)
 
+        # Ensure data directory exists for SQLite
+        (service_dir / "data").mkdir(exist_ok=True)
+        (service_dir / "data" / ".gitkeep").write_text("", encoding="utf-8")
+
         for gen_file in gen_files:
-            dest = service_dir / gen_file.filename
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(gen_file.content, encoding="utf-8")
+            file_path = service_dir / gen_file.filename
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(gen_file.content, encoding="utf-8")
 
         # Guarantee uvicorn's `generated:app` target exists in this folder
         if not refactoring_output:
@@ -287,16 +294,202 @@ def _save_outputs(state, source_path: str):
         if entry_status == "stub":
             stub_services.append(service_name)
 
-        (service_dir / "Dockerfile").write_text(_DOCKERFILE_TEMPLATE, encoding="utf-8")
-        (service_dir / "requirements.txt").write_text(_REQUIREMENTS, encoding="utf-8")
+        # ── Production Dockerfile (multi-stage) ──
+        service_slug = refactoring_output.service_name.lower().replace(" ", "-") if refactoring_output else service_name.lower().replace(" ", "-")
+        dockerfile_content = f"""# === {service_name} ===
+# Multi-stage build for minimal image size
 
-        service_name_slug = service_name.lower().replace(" ", "-").replace("_", "-")
+# Stage 1: Install dependencies
+FROM python:3.11-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim AS runtime
+WORKDIR /app
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
+
+# Copy installed packages from builder stage
+COPY --from=builder /install /usr/local
+
+# Copy application code
+COPY . .
+
+# Create data directory for SQLite and set permissions
+RUN mkdir -p /app/data && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+# Health check — Docker marks container unhealthy if /health fails
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Use exec form for proper signal handling (graceful shutdown)
+CMD ["uvicorn", "generated:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+"""
+        (service_dir / "Dockerfile").write_text(dockerfile_content, encoding="utf-8")
+
+        # ── requirements.txt ──
+        reqs_content = """# === Auto-generated dependencies ===
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+sqlalchemy>=2.0.0
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+httpx>=0.25.0
+"""
+        (service_dir / "requirements.txt").write_text(reqs_content, encoding="utf-8")
+
+        # ── .dockerignore ──
+        dockerignore_content = """__pycache__/
+*.pyc
+*.pyo
+.git/
+.env
+.venv/
+*.md
+tests/
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+"""
+        (service_dir / ".dockerignore").write_text(dockerignore_content, encoding="utf-8")
+
+        # ── .env.example ──
+        env_example = f"""# === {service_name} Environment Variables ===
+DATABASE_URL=sqlite:///./data/app.db
+SERVICE_NAME={service_slug}
+LOG_LEVEL=INFO
+ALLOWED_ORIGINS=*
+"""
+        (service_dir / ".env.example").write_text(env_example, encoding="utf-8")
+
+        # ── Add to docker-compose ──
+        service_name_slug = service_slug
         compose_services[service_name_slug] = {
-            "build": f"./{service_name}",
-            "ports": [f"{base_port}:8000"],
-            "restart": "always",
+            "build": {
+                "context": f"./{service_name}",
+                "dockerfile": "Dockerfile",
+            },
+            "container_name": service_name_slug,
+            "expose": ["8000"],
+            "environment": {
+                "DATABASE_URL": "sqlite:///./data/app.db",
+                "SERVICE_NAME": service_name_slug,
+                "LOG_LEVEL": "INFO",
+            },
+            "volumes": [
+                f"{service_name_slug}-data:/app/data",
+            ],
+            "networks": ["microservices"],
+            "restart": "unless-stopped",
+            "healthcheck": {
+                "test": ["CMD", "python", "-c",
+                         "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"],
+                "interval": "15s",
+                "timeout": "5s",
+                "retries": 3,
+                "start_period": "10s",
+            },
+            "deploy": {
+                "resources": {
+                    "limits": {"memory": "256M", "cpus": "0.5"},
+                    "reservations": {"memory": "128M"},
+                },
+            },
+            "logging": {
+                "driver": "json-file",
+                "options": {"max-size": "10m", "max-file": "3"},
+            },
         }
+        service_names_for_gateway.append(service_name_slug)
         base_port += 1
+
+    # ── Generate Nginx API Gateway ──
+    if service_names_for_gateway:
+        gateway_dir = output_dir / "api-gateway"
+        gateway_dir.mkdir(exist_ok=True)
+
+        # Build nginx.conf with upstream blocks and location routing
+        upstream_blocks = []
+        location_blocks = []
+        for svc_name in service_names_for_gateway:
+            upstream_blocks.append(
+                f"    upstream {svc_name.replace('-', '_')} {{\n"
+                f"        server {svc_name}:8000;\n"
+                f"    }}"
+            )
+            # Derive a path prefix from the service name (e.g., user-service -> /api/users)
+            path_prefix = svc_name.replace("-service", "").replace("-", "/")
+            location_blocks.append(
+                f"        # {svc_name}\n"
+                f"        location /api/{path_prefix} {{\n"
+                f"            proxy_pass http://{svc_name.replace('-', '_')};\n"
+                f"            proxy_set_header Host $host;\n"
+                f"            proxy_set_header X-Real-IP $remote_addr;\n"
+                f"            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n"
+                f"            proxy_set_header X-Forwarded-Proto $scheme;\n"
+                f"        }}"
+            )
+
+        nginx_conf = f"""# === Auto-Generated API Gateway (Nginx) ===
+# Routes requests to backend microservices by path prefix
+
+{"chr(10)".join(upstream_blocks)}
+
+    server {{
+        listen 80;
+        server_name localhost;
+
+        # Gateway health check
+        location /health {{
+            return 200 '{{"status": "healthy", "service": "api-gateway"}}';
+            add_header Content-Type application/json;
+        }}
+
+        # Service discovery — list all available services
+        location /api {{
+            return 200 '{{"services": {json.dumps(service_names_for_gateway)}}}';
+            add_header Content-Type application/json;
+        }}
+
+{chr(10).join(location_blocks)}
+
+        # Default — 404
+        location / {{
+            return 404 '{{"error": "Not found. Use /api for service discovery."}}';
+            add_header Content-Type application/json;
+        }}
+    }}
+"""
+        (gateway_dir / "nginx.conf").write_text(nginx_conf, encoding="utf-8")
+
+        # Add gateway to docker-compose
+        gateway_depends = {}
+        for svc_name in service_names_for_gateway:
+            gateway_depends[svc_name] = {"condition": "service_healthy"}
+
+        compose_services["api-gateway"] = {
+            "image": "nginx:alpine",
+            "container_name": "api-gateway",
+            "ports": ["8080:80"],
+            "volumes": [
+                "./api-gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro",
+            ],
+            "depends_on": gateway_depends,
+            "networks": ["microservices"],
+            "restart": "unless-stopped",
+            "healthcheck": {
+                "test": ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"],
+                "interval": "15s",
+                "timeout": "5s",
+                "retries": 3,
+            },
+        }
 
     if stub_services:
         print(
@@ -304,17 +497,106 @@ def _save_outputs(state, source_path: str):
             + ", ".join(stub_services)
         )
 
-    # Generate docker-compose.yml
+    # ── Generate docker-compose.yml ──
     if compose_services:
-        import yaml
+        # Build volumes dict
+        volumes_dict = {}
+        for svc_name in service_names_for_gateway:
+            volumes_dict[f"{svc_name}-data"] = None
+
         compose_content = {
-            "version": "3.8",
-            "services": compose_services
+            "services": compose_services,
+            "networks": {
+                "microservices": {
+                    "driver": "bridge",
+                },
+            },
+            "volumes": volumes_dict,
         }
         with open(output_dir / "docker-compose.yml", "w") as f:
-            yaml.dump(compose_content, f, default_flow_style=False, sort_keys=False)
+            yaml.dump(compose_content, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-    # Save test suites (one per service)
+    # ── Generate root .env ──
+    env_content = """# === Environment Variables for all services ===
+# Copy this to .env and adjust values for your deployment
+LOG_LEVEL=INFO
+ALLOWED_ORIGINS=*
+"""
+    (output_dir / ".env.example").write_text(env_content, encoding="utf-8")
+
+    # ── Generate README.md ──
+    svc_list = "\n".join([f"  - **{name}**" for name in service_names_for_gateway])
+    readme_content = f"""# Migration Output — Microservices
+
+> Auto-generated by Architecture Migration Assistant on {datetime.now().strftime("%Y-%m-%d %H:%M")}
+
+## Services Generated
+{svc_list}
+
+## Quick Start
+
+### Prerequisites
+- [Docker](https://www.docker.com/get-started) installed and running
+- [Docker Compose](https://docs.docker.com/compose/) v2+
+
+### Run All Services
+```bash
+# Build and start all services
+docker-compose up --build
+
+# Run in detached (background) mode
+docker-compose up --build -d
+```
+
+### Access
+- **API Gateway**: http://localhost:8080
+- **Service Discovery**: http://localhost:8080/api
+- **Health Check**: http://localhost:8080/health
+
+### Stop All Services
+```bash
+docker-compose down
+
+# Stop and remove volumes (clears all data)
+docker-compose down -v
+```
+
+### View Logs
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f <service-name>
+```
+
+## Project Structure
+```
+migration_output/
+├── docker-compose.yml          # Orchestrates all services
+├── .env.example                # Environment variable template
+├── api-gateway/
+│   └── nginx.conf              # Nginx reverse proxy config
+├── <service-name>/
+│   ├── main.py                 # FastAPI application
+│   ├── Dockerfile              # Multi-stage production build
+│   ├── requirements.txt        # Python dependencies
+│   ├── .dockerignore           # Docker build exclusions
+│   ├── .env.example            # Service-specific env vars
+│   └── data/                   # SQLite database directory
+└── tests/                      # Generated test suites
+```
+
+## Architecture
+- Each service runs in its own container with an isolated SQLite database
+- Services communicate through the `microservices` Docker network
+- The **API Gateway** (Nginx) provides a single entry point on port 8080
+- Health checks ensure services are ready before receiving traffic
+- Resource limits prevent any single service from consuming all host resources
+"""
+    (output_dir / "README.md").write_text(readme_content, encoding="utf-8")
+
+    # ── Save test suites (one per service) ──
     tests_dir = output_dir / "tests"
     for unit in state.service_units:
         if not unit.test_gen_output:
@@ -324,7 +606,7 @@ def _save_outputs(state, source_path: str):
             test_file = tests_dir / f"{unit.service.name}_{tc.name}.py"
             test_file.write_text(tc.code, encoding="utf-8")
 
-    # Save pipeline summary
+    # ── Save pipeline summary ──
     summary = {
         "project_id": state.project_id,
         "source_path": state.source_path,
@@ -360,7 +642,7 @@ def check_ollama():
         dashboard.console.print(f"  [bright_green]  Available models: {', '.join(model_names)}[/]")
 
         # Check for required models
-        required = ["qwen2.5-coder:7b"]
+        required = ["qwen2.5-coder:14b"]
         for req in required:
             found = any(req in name for name in model_names)
             status = "✓" if found else "✗"
