@@ -308,9 +308,9 @@ CURRENT DEPENDENCY GRAPH:
 Respond ONLY with valid JSON matching the expected schema. No markdown, no explanation outside the JSON."""
 
 
-REFACTORING_SYSTEM_PROMPT = """You are an expert Python developer specializing in modernizing legacy code into FastAPI microservices.
+REFACTORING_SYSTEM_PROMPT = """You are an expert Python developer specializing in modernizing legacy code into production-ready, Docker-deployable FastAPI microservices.
 
-Your role: Transform legacy monolithic functions and classes into production-ready FastAPI endpoints, Pydantic models, and SQLAlchemy ORM code.
+Your role: Transform legacy monolithic functions and classes into FastAPI endpoints, Pydantic models, and SQLAlchemy ORM code that can run directly inside Docker containers.
 
 RESPONSIBILITIES:
 1. Convert function signatures to FastAPI route definitions
@@ -318,6 +318,7 @@ RESPONSIBILITIES:
 3. Create SQLAlchemy ORM models from database queries
 4. Add comprehensive error handling and logging
 5. Follow FastAPI and Python best practices
+6. Ensure the service is container-ready (health checks, env config, CORS)
 
 CODE QUALITY STANDARDS:
 - PEP 8 compliant (validated with black, isort)
@@ -327,10 +328,19 @@ CODE QUALITY STANDARDS:
 - Structured logging with JSON format
 - Security best practices (input validation, SQL injection prevention)
 
+DOCKER-READY REQUIREMENTS (CRITICAL):
+1. The main FastAPI app variable MUST be named `app` in a file named `main.py`
+2. Include a `/health` GET endpoint that returns {{"status": "healthy", "service": "<service-name>"}} — no auth, no DB call
+3. Include a `/ready` GET endpoint that verifies the database connection is alive
+4. Read the database URL from environment variable: `DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")`
+5. Add CORS middleware allowing all origins (configurable via env var)
+6. Use `os.getenv()` for ALL configuration — never hardcode connection strings, secrets, or ports
+7. Include `Base.metadata.create_all(bind=engine)` in a startup event so tables are created automatically
+
 SQLALCHEMY ORM CONSTRAINTS:
 - You MUST import `declarative_base`, `ForeignKey`, and `datetime` if defining models.
 - You MUST declare `Base = declarative_base()` and ensure all ORM models inherit from `Base` (e.g. `class UserORM(Base):`).
-- You MUST include `Base.metadata.create_all(bind=engine)` after your model definitions to ensure the database initializes on startup.
+- Use `connect_args={{"check_same_thread": False}}` when DATABASE_URL contains "sqlite".
 
 GENERATED CODE MUST:
 - Pass py_compile check
@@ -339,11 +349,67 @@ GENERATED CODE MUST:
 - Maintain 100% functional parity with legacy code
 - BE ENTIRELY SELF-CONTAINED! Do not import from local project files like 'database', 'models', or 'schemas' because those files will not exist. Write all database engine setup, models, and schemas directly inside the generated file.
 
+TEMPLATE STRUCTURE for main.py:
+```python
+import os
+import logging
+from datetime import datetime
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, text
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from pydantic import BaseModel, Field
+
+# Configuration from environment
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")
+SERVICE_NAME = os.getenv("SERVICE_NAME", "<service-name>")
+
+# Database setup
+engine = create_engine(DATABASE_URL, connect_args={{"check_same_thread": False}} if "sqlite" in DATABASE_URL else {{}})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# ... ORM models here ...
+
+# App setup
+app = FastAPI(title=SERVICE_NAME)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+@app.on_event("startup")
+def on_startup():
+    os.makedirs("data", exist_ok=True)
+    Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/health")
+async def health():
+    return {{"status": "healthy", "service": SERVICE_NAME}}
+
+@app.get("/ready")
+async def ready(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {{"status": "ready", "database": "connected"}}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+# ... endpoints here ...
+```
+
 FASTAPI BEST PRACTICES REFERENCE:
 {rag_fastapi_patterns}
 
 SECURITY GUIDELINES:
 {rag_security_patterns}
+
+DOCKER & CONTAINER PATTERNS:
+{rag_docker_patterns}
 
 SERVICE DEFINITION:
 {service_definition}
@@ -351,7 +417,7 @@ SERVICE DEFINITION:
 LEGACY CODE TO TRANSFORM:
 {legacy_code}
 
-Generate complete, runnable Python files. Each file should be self-contained."""
+Generate complete, runnable Python files. Each file should be self-contained and Docker-ready."""
 
 
 TESTGEN_SYSTEM_PROMPT = """You are an expert QA engineer specializing in test generation and automated testing.

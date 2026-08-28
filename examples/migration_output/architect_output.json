@@ -1,0 +1,87 @@
+{
+  "proposed_services": [
+    {
+      "name": "UserManagement",
+      "bounded_context": "User Management",
+      "modules": [
+        "users",
+        "user",
+        "_active_sessions",
+        "hashed_password",
+        "hashlib",
+        "secrets",
+        "role_hierarchy"
+      ],
+      "tables": [
+        "UserProfile",
+        "User"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.9,
+      "reason": "High cohesion in user-related operations and dependencies."
+    },
+    {
+      "name": "OrderProcessing",
+      "bounded_context": "Order Processing",
+      "modules": [
+        "orders",
+        "order",
+        "Order",
+        "items",
+        "Product"
+      ],
+      "tables": [
+        "Order",
+        "OrderItem"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.9,
+      "reason": "High cohesion in order-related operations and dependencies."
+    },
+    {
+      "name": "PaymentProcessing",
+      "bounded_context": "Payment Processing",
+      "modules": [
+        "payments",
+        "payment_result"
+      ],
+      "tables": [
+        "Payment",
+        "Refund"
+      ],
+      "endpoints": [],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.9,
+      "reason": "High cohesion in payment-related operations and dependencies."
+    }
+  ],
+  "inter_service_patterns": {
+    "synchronous": [
+      "UserManagement -> OrderProcessing",
+      "UserManagement -> PaymentProcessing",
+      "OrderProcessing -> UserManagement",
+      "OrderProcessing -> PaymentProcessing",
+      "PaymentProcessing -> UserManagement",
+      "PaymentProcessing -> OrderProcessing"
+    ]
+  },
+  "data_ownership": {
+    "UserManagement": [
+      "UserProfile",
+      "User"
+    ],
+    "OrderProcessing": [
+      "Order",
+      "OrderItem"
+    ],
+    "PaymentProcessing": [
+      "Payment",
+      "Refund"
+    ]
+  }
+}

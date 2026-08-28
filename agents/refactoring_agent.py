@@ -66,15 +66,20 @@ class RefactoringAgent:
         # ── Step 2: RAG retrieval ──
         rag_fastapi = ""
         rag_security = ""
+        rag_docker = ""
         if self.retriever:
-            logger.info("Retrieving FastAPI and security patterns...")
+            logger.info("Retrieving FastAPI, security, and Docker patterns...")
             rag_fastapi = self.retriever.retrieve_for_refactoring(
                 f"Convert {', '.join(service.modules)} to FastAPI service"
+            )
+            rag_docker = self.retriever.retrieve_for_agent(
+                "refactoring",
+                "Docker containerization, Dockerfile, health checks, environment variables, CORS",
             )
 
         # ── Step 3: Call LLM for code generation ──
         logger.info("Calling LLM for code generation...")
-        generated_code = self._call_llm(service, legacy_code, rag_fastapi, rag_security)
+        generated_code = self._call_llm(service, legacy_code, rag_fastapi, rag_security, rag_docker)
 
         # ── Step 4: Post-process ──
         logger.info("Post-processing generated code...")
@@ -132,6 +137,7 @@ class RefactoringAgent:
         legacy_code: str,
         rag_fastapi: str,
         rag_security: str,
+        rag_docker: str = "",
     ) -> str:
         """Call Ollama for code generation."""
         service_def = {
@@ -145,6 +151,7 @@ class RefactoringAgent:
         prompt = REFACTORING_SYSTEM_PROMPT.format(
             rag_fastapi_patterns=rag_fastapi or "No patterns retrieved.",
             rag_security_patterns=rag_security or "No security patterns retrieved.",
+            rag_docker_patterns=rag_docker or "No Docker patterns retrieved.",
             service_definition=json.dumps(service_def, indent=2),
             legacy_code=legacy_code[:6000],  # Stay within context window
         )
@@ -186,7 +193,7 @@ class RefactoringAgent:
 
         if code_blocks:
             for i, block in enumerate(code_blocks):
-                filename = block.get("filename", f"{service_name.replace('-', '_')}_service.py")
+                filename = block.get("filename", "main.py")
                 files.append(GeneratedFile(
                     filename=filename,
                     content=block["code"],
@@ -206,7 +213,7 @@ class RefactoringAgent:
                     clean_code = parts[1]
 
             files.append(GeneratedFile(
-                filename=f"{service_name.replace('-', '_')}_service.py",
+                filename="main.py",
                 content=clean_code.strip(),
                 file_type="python",
             ))
@@ -228,7 +235,7 @@ class RefactoringAgent:
                         "filename": current_block,
                         "code": "\n".join(current_code),
                     })
-                current_block = "generated.py"
+                current_block = "main.py"
                 current_code = []
                 # Check if filename is on the same line
                 parts = line.strip().split()
