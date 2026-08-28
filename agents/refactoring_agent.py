@@ -192,11 +192,23 @@ class RefactoringAgent:
         code_blocks = self._extract_code_blocks(raw_code)
 
         if code_blocks:
-            for i, block in enumerate(code_blocks):
-                filename = block.get("filename", "main.py")
+            # Merge blocks that share a filename. The LLM often emits several
+            # unnamed ```python fences that all map to "generated.py"; writing
+            # them as separate files would silently overwrite each other, so
+            # concatenate instead to keep the full module.
+            merged: Dict[str, str] = {}
+            order: List[str] = []
+            for block in code_blocks:
+                filename = block.get("filename") or "generated.py"
+                if filename not in merged:
+                    merged[filename] = block["code"]
+                    order.append(filename)
+                else:
+                    merged[filename] = merged[filename].rstrip() + "\n\n" + block["code"].lstrip()
+            for filename in order:
                 files.append(GeneratedFile(
                     filename=filename,
-                    content=block["code"],
+                    content=merged[filename],
                     file_type="python",
                 ))
         else:
