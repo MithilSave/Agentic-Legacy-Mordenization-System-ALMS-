@@ -38,24 +38,20 @@ logger = logging.getLogger("ui.dashboard")
 
 BANNER = r"""
 [bold bright_green]
-    ╔══════════════════════════════════════════════════════════════════╗
-    ║                                                                  ║
-    ║     █████╗ ██████╗  ██████╗██╗  ██╗    ███╗   ███╗██╗ ██████╗   ║
-    ║    ██╔══██╗██╔══██╗██╔════╝██║  ██║    ████╗ ████║██║██╔════╝    ║
-    ║    ███████║██████╔╝██║     ███████║    ██╔████╔██║██║██║  ███╗  ║
-    ║    ██╔══██║██╔══██╗██║     ██╔══██║    ██║╚██╔╝██║██║██║   ██║   ║
-    ║    ██║  ██║██║  ██║╚██████╗██║  ██║    ██║ ╚═╝ ██║██║╚██████╔╝  ║
-    ║    ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ╚═╝     ╚═╝╚═╝ ╚═════╝   ║
-    ║                                                                  ║
-    ║     A R C H I T E C T U R E   M I G R A T I O N   A S S T .    ║
-    ║                                                                  ║
-    ║          ┌─────────────────────────────────────────┐             ║
-    ║          │  Monolith → Microservices  │  v1.0.0   │             ║
-    ║          │  Powered by Qwen2.5-coder:7b via Ollama│             ║
-    ║          │  ChromaDB RAG │ NetworkX │ DiskCache   │             ║
-    ║          └─────────────────────────────────────────┘             ║
-    ║                                                                  ║
-    ╚══════════════════════════════════════════════════════════════════╝
+     █████╗  ██╗     ███╗   ███╗███████╗ 
+    ██╔══██╗ ██║     ████╗ ████║██╔════╝ 
+    ███████║ ██║     ██╔████╔██║███████╗ 
+    ██╔══██║ ██║     ██║╚██╔╝██║╚════██║ 
+    ██║  ██║ ███████╗██║ ╚═╝ ██║███████║ 
+    ╚═╝  ╚═╝ ╚══════╝╚═╝     ╚═╝╚══════╝ 
+                                                                 
+ T H E   A G E N T I C   L E G A C Y   M O D E R N I Z A T I O N   S Y S T E M
+                                                                 
+          ┌─────────────────────────────────────────┐            
+          │  Monolith → Microservices  │  v1.0.0    │            
+          │  Powered by Qwen2.5-coder:14b via Ollama│            
+          │  ChromaDB RAG │ NetworkX │ DiskCache    │            
+          └─────────────────────────────────────────┘            
 [/bold bright_green]"""
 
 
@@ -110,7 +106,14 @@ class DOSDashboard:
     def show_banner(self):
         """Display the ASCII art banner with typewriter effect."""
         self.console.clear()
-        self.console.print(BANNER)
+        panel = Panel(
+            Align.center(BANNER.strip('\n')),
+            border_style="bold bright_green",
+            padding=(1, 4),
+            expand=False
+        )
+        self.console.print(Align.center(panel))
+        self.console.print()
         time.sleep(0.5)
 
         # System info bar
@@ -328,23 +331,24 @@ class DOSDashboard:
         elapsed = time.time() - self.start_time if self.start_time else 0
 
         self.console.print()
-        self.console.print(Panel(
-            Align.center(Text.from_markup(
-                f"[bold bright_green]"
-                f"╔════════════════════════════════════════╗\n"
-                f"║                                        ║\n"
-                f"║   ✅  MIGRATION PIPELINE COMPLETE  ✅   ║\n"
-                f"║                                        ║\n"
-                f"║   Services Generated: {data.get('services', 0):>3}              ║\n"
-                f"║   Tests Generated:    {data.get('tests', 0):>3}              ║\n"
-                f"║   Total Time:    {elapsed:>7.1f}s              ║\n"
-                f"║                                        ║\n"
-                f"╚════════════════════════════════════════╝"
-                f"[/]"
-            )),
+        
+        content = Text.from_markup(
+            f"[bold bright_green]"
+            f"Services Generated: {data.get('services', 0)}\n"
+            f"Tests Generated:    {data.get('tests', 0)}\n"
+            f"Total Time:         {elapsed:.1f}s"
+            f"[/]"
+        )
+        
+        panel = Panel(
+            Align.center(content),
+            title="[bold white]✅ MIGRATION PIPELINE COMPLETE ✅",
             border_style="bold bright_green",
-            padding=(1, 0),
-        ))
+            padding=(1, 4),
+            expand=False
+        )
+        
+        self.console.print(Align.center(panel))
 
         # Show final pipeline diagram
         self.show_pipeline()
