@@ -119,7 +119,7 @@ class DOSDashboard:
         # System info bar
         self._typewrite("[bright_green]  ╔══════════════════════════════════════════════════════════════╗")
         self._typewrite(f"  ║  System initialized at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}             ║")
-        self._typewrite("  ║  Model: qwen2.5-coder:7b │ Embeddings: nomic-embed-text    ║")
+        self._typewrite("  ║  Model: qwen2.5-coder:14b │ Embeddings: nomic-embed-text   ║")
         self._typewrite("  ║  Vector DB: ChromaDB │ Cache: DiskCache │ Graph: NetworkX   ║")
         self._typewrite("  ╚══════════════════════════════════════════════════════════════╝")
         self.console.print()
