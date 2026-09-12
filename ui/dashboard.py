@@ -495,9 +495,23 @@ class DOSDashboard:
                 ))
 
     def show_test_results(self, output):
-        """Display Test-Gen Agent results."""
+        """Display Test-Gen Agent results with py_compile status."""
         self.console.print()
         self.console.print(Rule("[bold bright_green]TEST SUITE[/]", style="bright_green"))
+
+        # py_compile status banner
+        if hasattr(output, "py_compile_passed"):
+            if output.py_compile_passed:
+                self.console.print(
+                    "  [bold bright_green]  ✓ py_compile: PASS — "
+                    "all generated tests are valid Python[/]\n"
+                )
+            else:
+                error_count = len(output.compile_errors) if hasattr(output, "compile_errors") else 0
+                self.console.print(
+                    f"  [bold bright_yellow]  ⚠ py_compile: PARTIAL — "
+                    f"{error_count} test(s) failed validation and were discarded[/]\n"
+                )
 
         table = Table(border_style="bright_green")
         table.add_column("#", style="dim", justify="right")
@@ -518,6 +532,12 @@ class DOSDashboard:
             f"\n  [bright_green]Total Tests: {output.total_tests} │ "
             f"Coverage Target: {output.coverage_target}%[/]"
         )
+
+        # Show compile errors if any
+        if hasattr(output, "compile_errors") and output.compile_errors:
+            self.console.print("\n  [bright_yellow]  Compile errors (discarded tests):[/]")
+            for err in output.compile_errors:
+                self.console.print(f"  [bright_yellow]    • {err}[/]")
 
     # ──────────────────────────────────────────────
     # Typewriter Effect

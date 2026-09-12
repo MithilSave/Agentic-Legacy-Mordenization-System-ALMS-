@@ -1,17 +1,17 @@
 services:
-  usermanagement:
+  app-service:
     build:
-      context: ./UserManagement
+      context: ./app-service
       dockerfile: Dockerfile
-    container_name: usermanagement
+    container_name: app-service
     expose:
     - '8000'
     environment:
       DATABASE_URL: sqlite:///./data/app.db
-      SERVICE_NAME: usermanagement
+      SERVICE_NAME: app-service
       LOG_LEVEL: INFO
     volumes:
-    - usermanagement-data:/app/data
+    - app-service-data:/app/data
     networks:
     - microservices
     restart: unless-stopped
@@ -37,19 +37,19 @@ services:
       options:
         max-size: 10m
         max-file: '3'
-  orderprocessing:
+  app-service-2:
     build:
-      context: ./OrderProcessing
+      context: ./app-service-2
       dockerfile: Dockerfile
-    container_name: orderprocessing
+    container_name: app-service-2
     expose:
     - '8000'
     environment:
       DATABASE_URL: sqlite:///./data/app.db
-      SERVICE_NAME: orderprocessing
+      SERVICE_NAME: app-service-2
       LOG_LEVEL: INFO
     volumes:
-    - orderprocessing-data:/app/data
+    - app-service-2-data:/app/data
     networks:
     - microservices
     restart: unless-stopped
@@ -75,19 +75,703 @@ services:
       options:
         max-size: 10m
         max-file: '3'
-  paymentprocessing:
+  app-service-3:
     build:
-      context: ./PaymentProcessing
+      context: ./app-service-3
       dockerfile: Dockerfile
-    container_name: paymentprocessing
+    container_name: app-service-3
     expose:
     - '8000'
     environment:
       DATABASE_URL: sqlite:///./data/app.db
-      SERVICE_NAME: paymentprocessing
+      SERVICE_NAME: app-service-3
       LOG_LEVEL: INFO
     volumes:
-    - paymentprocessing-data:/app/data
+    - app-service-3-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-service-4:
+    build:
+      context: ./app-service-4
+      dockerfile: Dockerfile
+    container_name: app-service-4
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-service-4
+      LOG_LEVEL: INFO
+    volumes:
+    - app-service-4-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service:
+    build:
+      context: ./models-service
+      dockerfile: Dockerfile
+    container_name: models-service
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-2:
+    build:
+      context: ./models-service-2
+      dockerfile: Dockerfile
+    container_name: models-service-2
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-2
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-2-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-3:
+    build:
+      context: ./models-service-3
+      dockerfile: Dockerfile
+    container_name: models-service-3
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-3
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-3-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-4:
+    build:
+      context: ./models-service-4
+      dockerfile: Dockerfile
+    container_name: models-service-4
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-4
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-4-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-models-service:
+    build:
+      context: ./app-models-service
+      dockerfile: Dockerfile
+    container_name: app-models-service
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-models-service
+      LOG_LEVEL: INFO
+    volumes:
+    - app-models-service-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-5:
+    build:
+      context: ./models-service-5
+      dockerfile: Dockerfile
+    container_name: models-service-5
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-5
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-5-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  database-service:
+    build:
+      context: ./database-service
+      dockerfile: Dockerfile
+    container_name: database-service
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: database-service
+      LOG_LEVEL: INFO
+    volumes:
+    - database-service-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-6:
+    build:
+      context: ./models-service-6
+      dockerfile: Dockerfile
+    container_name: models-service-6
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-6
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-6-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-7:
+    build:
+      context: ./models-service-7
+      dockerfile: Dockerfile
+    container_name: models-service-7
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-7
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-7-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-database-service:
+    build:
+      context: ./app-database-service
+      dockerfile: Dockerfile
+    container_name: app-database-service
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-database-service
+      LOG_LEVEL: INFO
+    volumes:
+    - app-database-service-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-orders-service:
+    build:
+      context: ./app-orders-service
+      dockerfile: Dockerfile
+    container_name: app-orders-service
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-orders-service
+      LOG_LEVEL: INFO
+    volumes:
+    - app-orders-service-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-orders-service-2:
+    build:
+      context: ./app-orders-service-2
+      dockerfile: Dockerfile
+    container_name: app-orders-service-2
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-orders-service-2
+      LOG_LEVEL: INFO
+    volumes:
+    - app-orders-service-2-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-database-service-2:
+    build:
+      context: ./app-database-service-2
+      dockerfile: Dockerfile
+    container_name: app-database-service-2
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-database-service-2
+      LOG_LEVEL: INFO
+    volumes:
+    - app-database-service-2-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  users-service:
+    build:
+      context: ./users-service
+      dockerfile: Dockerfile
+    container_name: users-service
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: users-service
+      LOG_LEVEL: INFO
+    volumes:
+    - users-service-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-8:
+    build:
+      context: ./models-service-8
+      dockerfile: Dockerfile
+    container_name: models-service-8
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-8
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-8-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  models-service-9:
+    build:
+      context: ./models-service-9
+      dockerfile: Dockerfile
+    container_name: models-service-9
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: models-service-9
+      LOG_LEVEL: INFO
+    volumes:
+    - models-service-9-data:/app/data
+    networks:
+    - microservices
+    restart: unless-stopped
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8000/health')
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  app-service-5:
+    build:
+      context: ./app-service-5
+      dockerfile: Dockerfile
+    container_name: app-service-5
+    expose:
+    - '8000'
+    environment:
+      DATABASE_URL: sqlite:///./data/app.db
+      SERVICE_NAME: app-service-5
+      LOG_LEVEL: INFO
+    volumes:
+    - app-service-5-data:/app/data
     networks:
     - microservices
     restart: unless-stopped
@@ -121,11 +805,47 @@ services:
     volumes:
     - ./api-gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      usermanagement:
+      app-service:
         condition: service_healthy
-      orderprocessing:
+      app-service-2:
         condition: service_healthy
-      paymentprocessing:
+      app-service-3:
+        condition: service_healthy
+      app-service-4:
+        condition: service_healthy
+      models-service:
+        condition: service_healthy
+      models-service-2:
+        condition: service_healthy
+      models-service-3:
+        condition: service_healthy
+      models-service-4:
+        condition: service_healthy
+      app-models-service:
+        condition: service_healthy
+      models-service-5:
+        condition: service_healthy
+      database-service:
+        condition: service_healthy
+      models-service-6:
+        condition: service_healthy
+      models-service-7:
+        condition: service_healthy
+      app-database-service:
+        condition: service_healthy
+      app-orders-service:
+        condition: service_healthy
+      app-orders-service-2:
+        condition: service_healthy
+      app-database-service-2:
+        condition: service_healthy
+      users-service:
+        condition: service_healthy
+      models-service-8:
+        condition: service_healthy
+      models-service-9:
+        condition: service_healthy
+      app-service-5:
         condition: service_healthy
     networks:
     - microservices
@@ -145,6 +865,24 @@ networks:
   microservices:
     driver: bridge
 volumes:
-  usermanagement-data: null
-  orderprocessing-data: null
-  paymentprocessing-data: null
+  app-service-data: null
+  app-service-2-data: null
+  app-service-3-data: null
+  app-service-4-data: null
+  models-service-data: null
+  models-service-2-data: null
+  models-service-3-data: null
+  models-service-4-data: null
+  app-models-service-data: null
+  models-service-5-data: null
+  database-service-data: null
+  models-service-6-data: null
+  models-service-7-data: null
+  app-database-service-data: null
+  app-orders-service-data: null
+  app-orders-service-2-data: null
+  app-database-service-2-data: null
+  users-service-data: null
+  models-service-8-data: null
+  models-service-9-data: null
+  app-service-5-data: null

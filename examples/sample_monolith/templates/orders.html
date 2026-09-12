@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Orders — Monolith App{% endblock %}
+{% block heading %}Order Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Create Order</h2>
+    </div>
+    <form id="createOrderForm" class="form">
+        <div class="form-group">
+            <label for="orderUserId">User ID</label>
+            <input type="number" id="orderUserId" name="user_id" required placeholder="User ID">
+        </div>
+        <div class="form-group">
+            <label for="orderItems">Items (JSON)</label>
+            <textarea id="orderItems" name="items" required placeholder='[{"name": "Widget", "price": 9.99, "quantity": 2}]'></textarea>
+        </div>
+        <div class="form-group">
+            <label for="shippingAddress">Shipping Address</label>
+            <input type="text" id="shippingAddress" name="shipping_address" placeholder="123 Main St">
+        </div>
+        <button type="submit" class="btn btn-primary">Create Order</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Recent Orders</h2>
+        <button class="btn btn-sm" onclick="loadOrders()">Refresh</button>
+    </div>
+    <div id="orderStats" class="stats-bar"></div>
+    <div id="ordersList" class="data-table-wrap">
+        <p class="loading">Loading orders...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadOrders();
+    loadOrderStats();
+});
+
+document.getElementById('createOrderForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    let items;
+    try {
+        items = JSON.parse(document.getElementById('orderItems').value);
+    } catch (err) {
+        showAlert('Invalid JSON for items', 'error');
+        return;
+    }
+    const data = {
+        user_id: parseInt(document.getElementById('orderUserId').value),
+        items: items,
+        shipping_address: document.getElementById('shippingAddress').value || null,
+    };
+    try {
+        await api.post('/api/orders', data);
+        showAlert('Order created successfully!', 'success');
+        this.reset();
+        loadOrders();
+        loadOrderStats();
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+});
+
+async function loadOrders() {
+    const container = document.getElementById('ordersList');
+    try {
+        // Load orders for user 1 as default view
+        const orders = await api.get('/api/users/1/orders');
+        const orderList = Array.isArray(orders) ? orders : (orders.orders || []);
+        if (orderList.length === 0) {
+            container.innerHTML = '<p class="empty">No orders found.</p>';
+            return;
+        }
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>ID</th><th>User</th><th>Status</th><th>Total</th><th>Created</th>';
+        html += '</tr></thead><tbody>';
+        orderList.forEach(o => {
+            const statusClass = o.status === 'completed' ? 'success' : (o.status === 'cancelled' ? 'error' : '');
+            html += `<tr>
+                <td>${o.id}</td>
+                <td>${o.user_id}</td>
+                <td><span class="badge ${statusClass}">${o.status}</span></td>
+                <td>$${(o.total || 0).toFixed(2)}</td>
+                <td>${o.created_at || 'N/A'}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = `<p class="error">Failed to load orders: ${err.message}</p>`;
+    }
+}
+
+async function loadOrderStats() {
+    try {
+        const stats = await api.get('/api/orders/stats');
+        const container = document.getElementById('orderStats');
+        container.innerHTML = `
+            <div class="stat-item"><span class="stat-value">${stats.total_orders || 0}</span><span class="stat-label">Total Orders</span></div>
+            <div class="stat-item"><span class="stat-value">$${(stats.total_revenue || 0).toFixed(2)}</span><span class="stat-label">Revenue</span></div>
+        `;
+    } catch (err) { /* ignore stats errors */ }
+}
+</script>
+{% endblock %}
