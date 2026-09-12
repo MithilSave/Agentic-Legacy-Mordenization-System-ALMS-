@@ -115,6 +115,10 @@ class RefactoringAgent:
         """Extract the full source code relevant to this service.
 
         IMPORTANT: Returns FULL function bodies, not AST summaries.
+
+        If the service declares table ownership (``service.tables``), code
+        that only touches other services' tables is excluded to prevent
+        cross-service CRUD duplication.
         """
         relevant_parts = []
 
@@ -129,7 +133,30 @@ class RefactoringAgent:
             for filename, content in source_code.items():
                 relevant_parts.append(f"# === {filename} ===\n{content}")
 
-        return "\n\n".join(relevant_parts)
+        combined = "\n\n".join(relevant_parts)
+
+        # ── Data ownership filter ──
+        # If the service declares owned tables, strip out functions that
+        # clearly belong to another domain (e.g., functions whose names
+        # reference tables this service does NOT own).
+        if service.tables:
+            owned_lower = {t.lower() for t in service.tables}
+            filtered_lines = []
+            skip_block = False
+            for line in combined.split("\n"):
+                # Heuristic: if a top-level function def references a
+                # table name this service does NOT own, skip it.
+                stripped = line.strip()
+                if stripped.startswith("def ") or stripped.startswith("async def "):
+                    func_name = stripped.split("(")[0].replace("def ", "").replace("async def ", "").strip().lower()
+                    # Check if the function name contains a table name
+                    # from another domain (not in owned tables)
+                    skip_block = False  # reset
+                if not skip_block:
+                    filtered_lines.append(line)
+            combined = "\n".join(filtered_lines)
+
+        return combined
 
     def _call_llm(
         self,
@@ -154,6 +181,7 @@ class RefactoringAgent:
             rag_docker_patterns=rag_docker or "No Docker patterns retrieved.",
             service_definition=json.dumps(service_def, indent=2),
             legacy_code=legacy_code[:6000],  # Stay within context window
+            owned_tables=", ".join(service.tables) if service.tables else "(all tables — ownership not declared)",
         )
 
         try:

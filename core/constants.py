@@ -91,6 +91,16 @@ class CodebaseStats(BaseModel):
     cyclomatic_complexity_avg: float = 0.0
 
 
+class FrontendAsset(BaseModel):
+    """A detected frontend asset (template, stylesheet, or script)."""
+    filename: str
+    asset_type: str = Field(default="template", description="template | stylesheet | script")
+    api_dependencies: List[str] = Field(
+        default_factory=list,
+        description="API paths this asset calls (e.g. '/api/users')",
+    )
+
+
 class AnalyzerOutput(BaseModel):
     """Complete output from the Analyzer Agent.
 
@@ -103,6 +113,10 @@ class AnalyzerOutput(BaseModel):
     hotspots: List[CouplingHotspot] = Field(default_factory=list)
     external_dependencies: List[str] = Field(default_factory=list)
     circular_dependencies: List[Dict[str, Any]] = Field(default_factory=list)
+    frontend_assets: List[FrontendAsset] = Field(
+        default_factory=list,
+        description="Detected frontend files (HTML templates, CSS, JS)",
+    )
 
 
 # ══════════════════════════════════════════════
@@ -190,6 +204,11 @@ class TestGenOutput(BaseModel):
     coverage_target: float = 85.0
     total_tests: int = 0
     passed_tests: int = 0
+    py_compile_passed: bool = False
+    compile_errors: List[str] = Field(
+        default_factory=list,
+        description="List of test names that failed py_compile validation",
+    )
 
 
 # ══════════════════════════════════════════════
@@ -413,6 +432,13 @@ DOCKER & CONTAINER PATTERNS:
 
 SERVICE DEFINITION:
 {service_definition}
+
+DATA OWNERSHIP (CRITICAL):
+This service owns ONLY the following database tables: {owned_tables}
+Do NOT generate ORM models, Pydantic schemas, or CRUD endpoints for any table
+not listed above. If you need data from another service's table, add a comment
+like `# TODO: inter-service call to <service-name>` instead of duplicating the
+model. Violating data ownership breaks the microservice boundary.
 
 LEGACY CODE TO TRANSFORM:
 {legacy_code}

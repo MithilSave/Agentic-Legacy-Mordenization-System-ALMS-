@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Users — Monolith App{% endblock %}
+{% block heading %}User Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Create User</h2>
+    </div>
+    <form id="createUserForm" class="form">
+        <div class="form-group">
+            <label for="userName">Name</label>
+            <input type="text" id="userName" name="name" required placeholder="Full Name">
+        </div>
+        <div class="form-group">
+            <label for="userEmail">Email</label>
+            <input type="email" id="userEmail" name="email" required placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+            <label for="userPassword">Password</label>
+            <input type="password" id="userPassword" name="password" required placeholder="Password">
+        </div>
+        <div class="form-group">
+            <label for="userRole">Role</label>
+            <select id="userRole" name="role">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create User</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>All Users</h2>
+        <button class="btn btn-sm" onclick="loadUsers()">Refresh</button>
+    </div>
+    <div id="usersList" class="data-table-wrap">
+        <p class="loading">Loading users...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', loadUsers);
+
+document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const data = {
+        name: document.getElementById('userName').value,
+        email: document.getElementById('userEmail').value,
+        password: document.getElementById('userPassword').value,
+        role: document.getElementById('userRole').value,
+    };
+    try {
+        const resp = await api.post('/api/users', data);
+        showAlert('User created successfully!', 'success');
+        this.reset();
+        loadUsers();
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+});
+
+async function loadUsers() {
+    const container = document.getElementById('usersList');
+    try {
+        const users = await api.get('/api/users');
+        if (!users || users.length === 0) {
+            container.innerHTML = '<p class="empty">No users found.</p>';
+            return;
+        }
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th>';
+        html += '</tr></thead><tbody>';
+        const userList = Array.isArray(users) ? users : (users.users || []);
+        userList.forEach(u => {
+            html += `<tr>
+                <td>${u.id}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td><span class="badge">${u.role || 'user'}</span></td>
+                <td><button class="btn btn-sm" onclick="viewUser(${u.id})">View</button></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = `<p class="error">Failed to load users: ${err.message}</p>`;
+    }
+}
+
+async function viewUser(id) {
+    try {
+        const user = await api.get(`/api/users/${id}`);
+        alert(JSON.stringify(user, null, 2));
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+}
+</script>
+{% endblock %}

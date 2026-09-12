@@ -12,14 +12,16 @@ Per CONTEXT.md §9 / IMPLEMENTATION_PLAN_v2.md §3:
 
 import json
 import logging
-from typing import Dict, Any, Optional
+import re
+from typing import Dict, Any, Optional, List
+from pathlib import Path
 
 import ollama as ollama_client
 
 from core.config import Config
 from core.constants import (
     AnalyzerOutput, GraphNode, GraphEdge, CouplingHotspot,
-    CodebaseStats, ANALYZER_SYSTEM_PROMPT, Severity, EdgeType
+    CodebaseStats, FrontendAsset, ANALYZER_SYSTEM_PROMPT, Severity, EdgeType
 )
 from tools.code_analysis import (
     extract_code_structure, build_dependency_graph,
@@ -117,6 +119,13 @@ class AnalyzerAgent:
         # ── Step 8: Build Validated Output ──
         logger.info("Step 8: Validating output with Pydantic...")
         output = self._build_output(stats, graph_dict, hotspots, cycles, external_deps, llm_insights)
+
+        # ── Step 9: Detect Frontend Assets ──
+        logger.info("Step 9: Detecting frontend assets (HTML, CSS, JS)...")
+        frontend_assets = self._detect_frontend_assets(source_path)
+        output.frontend_assets = frontend_assets
+        if frontend_assets:
+            logger.info(f"Detected {len(frontend_assets)} frontend assets")
 
         # ── Cache result ──
         if self.cache:
@@ -278,3 +287,57 @@ class AnalyzerAgent:
             external_dependencies=external_deps,
             circular_dependencies=[{"cycle": c} for c in cycles],
         )
+
+    # ──────────────────────────────────────────────
+    # Frontend Asset Detection
+    # ──────────────────────────────────────────────
+
+    def _detect_frontend_assets(self, source_path: str) -> List[FrontendAsset]:
+        """Detect HTML templates, CSS stylesheets, and JS scripts in the codebase.
+
+        For each asset, also extract any API endpoint references
+        (e.g., ``fetch('/api/users')`` in JS files or ``action="/api/..."``
+        in HTML forms) so the migration can rewire them to the gateway.
+        """
+        assets: List[FrontendAsset] = []
+        root = Path(source_path)
+
+        if not root.is_dir():
+            return assets
+
+        # File extension → asset type mapping
+        ext_map = {
+            ".html": "template",
+            ".htm": "template",
+            ".css": "stylesheet",
+            ".js": "script",
+        }
+
+        # Regex to find API endpoint references
+        api_pattern = re.compile(r"['\"`](/api/[a-zA-Z0-9_/\-{}$]+)['\"`]")
+
+        for path in sorted(root.rglob("*")):
+            if path.suffix.lower() not in ext_map:
+                continue
+            if "__pycache__" in str(path) or "node_modules" in str(path):
+                continue
+
+            asset_type = ext_map[path.suffix.lower()]
+            rel_path = str(path.relative_to(root))
+
+            # Extract API dependencies from file content
+            api_deps: List[str] = []
+            try:
+                content = path.read_text(encoding="utf-8", errors="replace")
+                matches = api_pattern.findall(content)
+                api_deps = sorted(set(matches))
+            except Exception:
+                pass
+
+            assets.append(FrontendAsset(
+                filename=rel_path,
+                asset_type=asset_type,
+                api_dependencies=api_deps,
+            ))
+
+        return assets

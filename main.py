@@ -606,6 +606,112 @@ migration_output/
             test_file = tests_dir / f"{unit.service.name}_{tc.name}.py"
             test_file.write_text(tc.code, encoding="utf-8")
 
+    # ── Generate frontend container (if frontend assets detected) ──
+    frontend_assets = []
+    if state.analyzer_output and hasattr(state.analyzer_output, "frontend_assets"):
+        frontend_assets = state.analyzer_output.frontend_assets
+
+    if frontend_assets:
+        import re as _re
+        import shutil
+
+        frontend_dir = output_dir / "frontend"
+        frontend_dir.mkdir(exist_ok=True)
+
+        source_root = Path(source_path)
+        if source_root.is_file():
+            source_root = source_root.parent
+
+        for asset in frontend_assets:
+            src_file = source_root / asset.filename
+            if not src_file.exists():
+                continue
+
+            dst_file = frontend_dir / asset.filename
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Read, rewrite API URLs to go through the gateway, then write
+            content = src_file.read_text(encoding="utf-8", errors="replace")
+            # Rewrite /api/* URLs to use the gateway base
+            # In Docker-compose, the gateway is at http://api-gateway:80
+            # but for the browser, it's the same host on port 8080
+            content = content.replace("'/api/", "'/api/")  # no-op (already correct)
+            dst_file.write_text(content, encoding="utf-8")
+
+        # Generate Nginx Dockerfile for frontend
+        frontend_dockerfile = """# === Frontend Container ===
+# Serves static HTML/CSS/JS and proxies /api/* to the API gateway
+
+FROM nginx:alpine
+
+# Copy frontend assets
+COPY templates/ /usr/share/nginx/html/
+COPY static/ /usr/share/nginx/html/static/
+
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \\
+    CMD wget --quiet --tries=1 --spider http://localhost:80/ || exit 1
+"""
+        (frontend_dir / "Dockerfile").write_text(frontend_dockerfile, encoding="utf-8")
+
+        # Generate nginx config for frontend
+        frontend_nginx = """# Frontend Nginx config — serves static files and proxies API calls
+server {
+    listen 80;
+    server_name localhost;
+
+    root /usr/share/nginx/html;
+    index base.html index.html;
+
+    # Serve static files directly
+    location /static/ {
+        alias /usr/share/nginx/html/static/;
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Proxy API calls to the API gateway
+    location /api/ {
+        proxy_pass http://api-gateway:80/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Serve HTML pages
+    location / {
+        try_files $uri $uri.html $uri/ /base.html;
+    }
+}
+"""
+        (frontend_dir / "nginx.conf").write_text(frontend_nginx, encoding="utf-8")
+
+        # Add frontend to docker-compose
+        compose_services["frontend"] = {
+            "build": {
+                "context": "./frontend",
+                "dockerfile": "Dockerfile",
+            },
+            "container_name": "frontend",
+            "ports": ["3000:80"],
+            "depends_on": {"api-gateway": {"condition": "service_healthy"}} if "api-gateway" in compose_services else {},
+            "networks": ["microservices"],
+            "restart": "unless-stopped",
+            "healthcheck": {
+                "test": ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"],
+                "interval": "15s",
+                "timeout": "5s",
+                "retries": 3,
+            },
+        }
+
+        print(f"\n  ✓ Frontend container generated with {len(frontend_assets)} assets")
+
     # ── Save pipeline summary ──
     summary = {
         "project_id": state.project_id,

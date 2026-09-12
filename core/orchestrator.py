@@ -480,15 +480,22 @@ class PipelineOrchestrator:
         self.audit.log_agent_action(
             "test_gen", f"Generated tests for {service.name}",
             phase="testing", duration_ms=duration,
-            details={"tests": test_output.total_tests},
+            details={
+                "tests": test_output.total_tests,
+                "py_compile_passed": test_output.py_compile_passed,
+                "compile_errors": len(test_output.compile_errors),
+            },
         )
+
+        # Flag for human review if tests failed to compile
+        needs_review = not test_output.py_compile_passed and test_output.total_tests == 0
         unit = ServiceUnit(
             service=service,
             refactoring_output=refactoring_output,
             test_gen_output=test_output,
             compile_attempts=gstate["branch_compile_attempts"],
-            needs_human_review=False,
-            status="done",
+            needs_human_review=needs_review,
+            status="done" if not needs_review else "failed",
         )
         return {"service_units": [unit]}
 

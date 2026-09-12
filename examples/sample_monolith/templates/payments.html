@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Payments — Monolith App{% endblock %}
+{% block heading %}Payment History{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Payment Statistics</h2>
+    </div>
+    <div id="paymentStats" class="stats-bar">
+        <p class="loading">Loading stats...</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>User Payments</h2>
+        <div class="inline-form">
+            <input type="number" id="paymentUserId" value="1" min="1" placeholder="User ID">
+            <button class="btn btn-sm" onclick="loadPayments()">Load</button>
+        </div>
+    </div>
+    <div id="paymentsList" class="data-table-wrap">
+        <p class="loading">Loading payments...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadPayments();
+    loadPaymentStats();
+});
+
+async function loadPayments() {
+    const userId = document.getElementById('paymentUserId').value || 1;
+    const container = document.getElementById('paymentsList');
+    try {
+        const payments = await api.get(`/api/users/${userId}/payments`);
+        const payList = Array.isArray(payments) ? payments : (payments.payments || []);
+        if (payList.length === 0) {
+            container.innerHTML = '<p class="empty">No payments found for this user.</p>';
+            return;
+        }
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>ID</th><th>Order</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th>';
+        html += '</tr></thead><tbody>';
+        payList.forEach(p => {
+            const statusClass = p.status === 'completed' ? 'success' : (p.status === 'refunded' ? 'error' : '');
+            html += `<tr>
+                <td>${p.id}</td>
+                <td>${p.order_id || 'N/A'}</td>
+                <td>$${(p.amount || 0).toFixed(2)}</td>
+                <td>${p.method || 'N/A'}</td>
+                <td><span class="badge ${statusClass}">${p.status}</span></td>
+                <td>${p.created_at || 'N/A'}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = `<p class="error">Failed to load payments: ${err.message}</p>`;
+    }
+}
+
+async function loadPaymentStats() {
+    try {
+        const stats = await api.get('/api/payments/stats');
+        const container = document.getElementById('paymentStats');
+        container.innerHTML = `
+            <div class="stat-item"><span class="stat-value">${stats.total_payments || 0}</span><span class="stat-label">Total Payments</span></div>
+            <div class="stat-item"><span class="stat-value">$${(stats.total_amount || 0).toFixed(2)}</span><span class="stat-label">Total Amount</span></div>
+            <div class="stat-item"><span class="stat-value">${stats.refunds || 0}</span><span class="stat-label">Refunds</span></div>
+        `;
+    } catch (err) { /* ignore stats errors */ }
+}
+</script>
+{% endblock %}
