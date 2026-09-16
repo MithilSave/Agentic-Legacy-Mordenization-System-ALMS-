@@ -16,7 +16,7 @@ This is the test fixture for the Architecture Migration Assistant.
 - SQL string formatting
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import logging
 
 # ANTI-PATTERN: All modules imported at top level — circular dependency risk
@@ -48,6 +48,30 @@ logger = logging.getLogger("monolith.app")
 
 # Initialize database on startup
 get_connection()
+
+
+# ──────────────────────────────────────────────
+# Frontend Routes (Jinja2 Templates)
+# ──────────────────────────────────────────────
+
+@app.route("/")
+def dashboard():
+    return render_template("base.html", active_page="dashboard")
+
+
+@app.route("/users")
+def users_page():
+    return render_template("users.html", active_page="users")
+
+
+@app.route("/orders")
+def orders_page():
+    return render_template("orders.html", active_page="orders")
+
+
+@app.route("/payments")
+def payments_page():
+    return render_template("payments.html", active_page="payments")
 
 
 # ──────────────────────────────────────────────

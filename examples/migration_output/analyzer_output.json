@@ -1,13 +1,13 @@
 {
   "codebase_stats": {
     "total_files": 6,
-    "total_lines": 1578,
-    "total_functions": 76,
+    "total_lines": 1602,
+    "total_functions": 80,
     "total_classes": 7,
     "languages": [
       "python"
     ],
-    "cyclomatic_complexity_avg": 2.32
+    "cyclomatic_complexity_avg": 2.25
   },
   "nodes": [
     {
@@ -77,34 +77,56 @@
       "docstring": null
     },
     {
+      "id": "app.dashboard",
+      "type": "function",
+      "module": "app",
+      "metrics": {
+        "complexity": 1,
+        "loc": 2,
+        "parameters": 0
+      },
+      "docstring": null
+    },
+    {
+      "id": "app.users_page",
+      "type": "function",
+      "module": "app",
+      "metrics": {
+        "complexity": 1,
+        "loc": 2,
+        "parameters": 0
+      },
+      "docstring": null
+    },
+    {
+      "id": "app.orders_page",
+      "type": "function",
+      "module": "app",
+      "metrics": {
+        "complexity": 1,
+        "loc": 2,
+        "parameters": 0
+      },
+      "docstring": null
+    },
+    {
+      "id": "app.payments_page",
+      "type": "function",
+      "module": "app",
+      "metrics": {
+        "complexity": 1,
+        "loc": 2,
+        "parameters": 0
+      },
+      "docstring": null
+    },
+    {
       "id": "app.login",
       "type": "function",
       "module": "app",
       "metrics": {
         "complexity": 5,
         "loc": 10,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "app.route",
-      "type": "function",
-      "module": "app",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "request.get_json",
-      "type": "function",
-      "module": "request",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
         "parameters": 0
       },
       "docstring": null
@@ -121,34 +143,12 @@
       "docstring": null
     },
     {
-      "id": "jsonify",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "app.do_logout",
       "type": "function",
       "module": "app",
       "metrics": {
         "complexity": 2,
         "loc": 5,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "replace",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
         "parameters": 0
       },
       "docstring": null
@@ -165,34 +165,12 @@
       "docstring": null
     },
     {
-      "id": "request.headers.get",
-      "type": "function",
-      "module": "request",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "app.api_list_users",
       "type": "function",
       "module": "app",
       "metrics": {
         "complexity": 1,
         "loc": 4,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "request.args.get",
-      "type": "function",
-      "module": "request",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
         "parameters": 0
       },
       "docstring": null
@@ -227,28 +205,6 @@
         "complexity": 2,
         "loc": 26,
         "parameters": 4
-      },
-      "docstring": null
-    },
-    {
-      "id": "data.get",
-      "type": "function",
-      "module": "data",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "str",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -627,17 +583,6 @@
       "docstring": null
     },
     {
-      "id": "sqlite3.connect",
-      "type": "function",
-      "module": "sqlite3",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "database._init_tables",
       "type": "function",
       "module": "database",
@@ -649,39 +594,6 @@
       "docstring": null
     },
     {
-      "id": "conn.cursor",
-      "type": "function",
-      "module": "conn",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "cursor.executescript",
-      "type": "function",
-      "module": "cursor",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "conn.commit",
-      "type": "function",
-      "module": "conn",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "database.query",
       "type": "function",
       "module": "database",
@@ -689,28 +601,6 @@
         "complexity": 2,
         "loc": 9,
         "parameters": 2
-      },
-      "docstring": null
-    },
-    {
-      "id": "cursor.fetchall",
-      "type": "function",
-      "module": "cursor",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "cursor.execute",
-      "type": "function",
-      "module": "cursor",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -732,17 +622,6 @@
       "metrics": {
         "complexity": 2,
         "loc": 6,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "_connection.close",
-      "type": "function",
-      "module": "_connection",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
         "parameters": 0
       },
       "docstring": null
@@ -781,39 +660,6 @@
       "docstring": null
     },
     {
-      "id": "cls",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "bool",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "item.to_dict",
-      "type": "function",
-      "module": "item",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "users._log_action",
       "type": "function",
       "module": "users",
@@ -821,83 +667,6 @@
         "complexity": 2,
         "loc": 9,
         "parameters": 3
-      },
-      "docstring": null
-    },
-    {
-      "id": "logger.info",
-      "type": "function",
-      "module": "logger",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "ValueError",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "user.get",
-      "type": "function",
-      "module": "user",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "len",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "item.get",
-      "type": "function",
-      "module": "item",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "Product.from_row",
-      "type": "function",
-      "module": "Product",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "validated_items.append",
-      "type": "function",
-      "module": "validated_items",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -913,83 +682,6 @@
       "docstring": null
     },
     {
-      "id": "round",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "payment_result.get",
-      "type": "function",
-      "module": "payment_result",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "logger.error",
-      "type": "function",
-      "module": "logger",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "Order.from_row",
-      "type": "function",
-      "module": "Order",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "order.to_dict",
-      "type": "function",
-      "module": "order",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "items.append",
-      "type": "function",
-      "module": "items",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "params.append",
-      "type": "function",
-      "module": "params",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "payments.get_payment_status",
       "type": "function",
       "module": "payments",
@@ -997,28 +689,6 @@
         "complexity": 2,
         "loc": 12,
         "parameters": 1
-      },
-      "docstring": null
-    },
-    {
-      "id": "orders.append",
-      "type": "function",
-      "module": "orders",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "valid_transitions.get",
-      "type": "function",
-      "module": "valid_transitions",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -1045,17 +715,6 @@
       "docstring": null
     },
     {
-      "id": "PermissionError",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "payments._call_payment_gateway",
       "type": "function",
       "module": "payments",
@@ -1078,50 +737,6 @@
       "docstring": null
     },
     {
-      "id": "random.random",
-      "type": "function",
-      "module": "random",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "logger.warning",
-      "type": "function",
-      "module": "logger",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "uuid.uuid4",
-      "type": "function",
-      "module": "uuid",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "payments.append",
-      "type": "function",
-      "module": "payments",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "payments._call_refund_gateway",
       "type": "function",
       "module": "payments",
@@ -1129,17 +744,6 @@
         "complexity": 2,
         "loc": 9,
         "parameters": 2
-      },
-      "docstring": null
-    },
-    {
-      "id": "max",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -1155,50 +759,6 @@
       "docstring": null
     },
     {
-      "id": "secrets.token_hex",
-      "type": "function",
-      "module": "secrets",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "hexdigest",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "hashlib.sha256",
-      "type": "function",
-      "module": "hashlib",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "encode",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "users.verify_password",
       "type": "function",
       "module": "users",
@@ -1206,72 +766,6 @@
         "complexity": 2,
         "loc": 8,
         "parameters": 2
-      },
-      "docstring": null
-    },
-    {
-      "id": "hashed_password.split",
-      "type": "function",
-      "module": "hashed_password",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "User.from_row",
-      "type": "function",
-      "module": "User",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "secrets.token_urlsafe",
-      "type": "function",
-      "module": "secrets",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "isoformat",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "user.to_dict",
-      "type": "function",
-      "module": "user",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "datetime.now",
-      "type": "function",
-      "module": "datetime",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -1287,28 +781,6 @@
       "docstring": null
     },
     {
-      "id": "_active_sessions.get",
-      "type": "function",
-      "module": "_active_sessions",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "_active_sessions.pop",
-      "type": "function",
-      "module": "_active_sessions",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "users.get_user_by_email",
       "type": "function",
       "module": "users",
@@ -1320,61 +792,6 @@
       "docstring": null
     },
     {
-      "id": "join",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "list",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "kwargs.items",
-      "type": "function",
-      "module": "kwargs",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "updates.values",
-      "type": "function",
-      "module": "updates",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "updates.keys",
-      "type": "function",
-      "module": "updates",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
       "id": "users.change_password",
       "type": "function",
       "module": "users",
@@ -1382,28 +799,6 @@
         "complexity": 3,
         "loc": 18,
         "parameters": 3
-      },
-      "docstring": null
-    },
-    {
-      "id": "UserProfile",
-      "type": "function",
-      "module": "unknown",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
-      },
-      "docstring": null
-    },
-    {
-      "id": "role_hierarchy.get",
-      "type": "function",
-      "module": "role_hierarchy",
-      "metrics": {
-        "complexity": 1,
-        "loc": 0,
-        "parameters": 0
       },
       "docstring": null
     },
@@ -1572,30 +967,9 @@
     },
     {
       "source": "app.login",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.login",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.login",
       "target": "users.authenticate",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.login",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -1607,20 +981,6 @@
     },
     {
       "source": "users.authenticate",
-      "target": "User.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
-      "target": "logger.warning",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
       "target": "users.verify_password",
       "type": "internal_call",
       "confidence": 0.9,
@@ -1628,58 +988,9 @@
     },
     {
       "source": "users.authenticate",
-      "target": "secrets.token_urlsafe",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
       "target": "users._log_action",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
-      "target": "logger.info",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
-      "target": "isoformat",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
-      "target": "user.to_dict",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.authenticate",
-      "target": "datetime.now",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.do_logout",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.do_logout",
-      "target": "replace",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -1690,52 +1001,10 @@
       "library": null
     },
     {
-      "source": "app.do_logout",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.do_logout",
-      "target": "request.headers.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.logout",
-      "target": "_active_sessions.pop",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "users.logout",
       "target": "users._log_action",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_list_users",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_list_users",
-      "target": "request.args.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_list_users",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -1760,52 +1029,10 @@
       "library": null
     },
     {
-      "source": "users.list_users",
-      "target": "User.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_user",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_user",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_create_user",
       "target": "users.create_user",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_create_user",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_user",
-      "target": "data.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_user",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -1838,34 +1065,6 @@
     },
     {
       "source": "users.create_user",
-      "target": "logger.info",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.create_user",
-      "target": "users.get_user",
-      "type": "internal_call",
-      "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "users.create_user",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user",
       "target": "users.get_user",
       "type": "internal_call",
       "confidence": 0.9,
@@ -1873,9 +1072,9 @@
     },
     {
       "source": "app.api_get_user",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
+      "target": "users.get_user",
+      "type": "internal_call",
+      "confidence": 0.9,
       "library": null
     },
     {
@@ -1890,27 +1089,6 @@
       "target": "models.to_dict",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "users.get_user",
-      "target": "User.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_user",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_user",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -1921,27 +1099,6 @@
       "library": null
     },
     {
-      "source": "app.api_update_user",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_user",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_user",
-      "target": "join",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "users.update_user",
       "target": "database.execute",
       "type": "internal_call",
@@ -1963,52 +1120,10 @@
       "library": null
     },
     {
-      "source": "users.update_user",
-      "target": "list",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_user",
-      "target": "kwargs.items",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_user",
-      "target": "updates.values",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_user",
-      "target": "updates.keys",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_delete_user",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_delete_user",
       "target": "users.delete_user",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_delete_user",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2027,23 +1142,9 @@
     },
     {
       "source": "app.api_get_profile",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_profile",
       "target": "users.get_profile",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_get_profile",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2068,45 +1169,10 @@
       "library": null
     },
     {
-      "source": "users.get_profile",
-      "target": "UserProfile",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_profile",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_profile",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_update_profile",
       "target": "users.update_profile",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_update_profile",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_profile",
-      "target": "join",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2131,52 +1197,10 @@
       "library": null
     },
     {
-      "source": "users.update_profile",
-      "target": "list",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_profile",
-      "target": "kwargs.items",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_profile",
-      "target": "updates.values",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.update_profile",
-      "target": "updates.keys",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_user_payment_summary",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_user_payment_summary",
       "target": "users.get_user_payment_summary",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_user_payment_summary",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2187,52 +1211,10 @@
       "library": null
     },
     {
-      "source": "users.get_user_payment_summary",
-      "target": "round",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_order",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_order",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_create_order",
       "target": "orders.create_order",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_create_order",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_order",
-      "target": "data.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_create_order",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2258,13 +1240,6 @@
     },
     {
       "source": "orders.create_order",
-      "target": "logger.info",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
       "target": "orders.get_order",
       "type": "internal_call",
       "confidence": 0.9,
@@ -2272,51 +1247,9 @@
     },
     {
       "source": "orders.create_order",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "user.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "len",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "item.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
       "target": "database.query",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "Product.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "validated_items.append",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2327,34 +1260,6 @@
       "library": null
     },
     {
-      "source": "orders.create_order",
-      "target": "round",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "payment_result.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.create_order",
-      "target": "logger.error",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_order",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_get_order",
       "target": "orders.get_order",
       "type": "internal_call",
@@ -2362,52 +1267,10 @@
       "library": null
     },
     {
-      "source": "app.api_get_order",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "orders.get_order",
       "target": "database.query",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "orders.get_order",
-      "target": "Order.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.get_order",
-      "target": "order.to_dict",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.get_order",
-      "target": "items.append",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user_orders",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user_orders",
-      "target": "request.args.get",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2418,24 +1281,10 @@
       "library": null
     },
     {
-      "source": "app.api_get_user_orders",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "orders.get_user_orders",
       "target": "database.query",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "orders.get_user_orders",
-      "target": "params.append",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2453,27 +1302,6 @@
       "library": null
     },
     {
-      "source": "orders.get_user_orders",
-      "target": "orders.append",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_order_status",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_order_status",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_update_order_status",
       "target": "orders.update_order_status",
       "type": "internal_call",
@@ -2481,38 +1309,10 @@
       "library": null
     },
     {
-      "source": "app.api_update_order_status",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_order_status",
-      "target": "data.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_update_order_status",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "orders.update_order_status",
       "target": "database.query",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "orders.update_order_status",
-      "target": "valid_transitions.get",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2527,13 +1327,6 @@
       "target": "orders.get_order",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "orders.update_order_status",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2552,44 +1345,9 @@
     },
     {
       "source": "app.api_cancel_order",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_cancel_order",
-      "target": "data.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_cancel_order",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_cancel_order",
       "target": "orders.cancel_order",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_cancel_order",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_cancel_order",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2608,13 +1366,6 @@
     },
     {
       "source": "orders.cancel_order",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.cancel_order",
       "target": "payments.process_refund",
       "type": "internal_call",
       "confidence": 0.9,
@@ -2628,52 +1379,10 @@
       "library": null
     },
     {
-      "source": "orders.cancel_order",
-      "target": "PermissionError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.cancel_order",
-      "target": "logger.error",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "orders.cancel_order",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_order_stats",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_order_stats",
-      "target": "request.args.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_order_stats",
       "target": "orders.get_order_stats",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_order_stats",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2684,31 +1393,10 @@
       "library": null
     },
     {
-      "source": "orders.get_order_stats",
-      "target": "round",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_payment",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_get_payment",
       "target": "payments.get_payment",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_get_payment",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2720,30 +1408,9 @@
     },
     {
       "source": "app.api_get_user_payments",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user_payments",
-      "target": "request.args.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user_payments",
       "target": "payments.get_user_payments",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_get_user_payments",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2751,20 +1418,6 @@
       "target": "database.query",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "payments.get_user_payments",
-      "target": "payments.append",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_payment_stats",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2775,13 +1428,6 @@
       "library": null
     },
     {
-      "source": "app.api_payment_stats",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "payments.get_payment_stats",
       "target": "database.query",
       "type": "internal_call",
@@ -2789,59 +1435,10 @@
       "library": null
     },
     {
-      "source": "payments.get_payment_stats",
-      "target": "round",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments.get_payment_stats",
-      "target": "max",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_refund_order",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_refund_order",
-      "target": "request.get_json",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "app.api_refund_order",
       "target": "payments.process_refund",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "app.api_refund_order",
-      "target": "data.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_refund_order",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.api_refund_order",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -2873,34 +1470,6 @@
       "library": null
     },
     {
-      "source": "payments.process_refund",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.health_check",
-      "target": "app.route",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "app.health_check",
-      "target": "jsonify",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database.get_connection",
-      "target": "sqlite3.connect",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "database.get_connection",
       "target": "database._init_tables",
       "type": "internal_call",
@@ -2908,27 +1477,6 @@
       "library": null
     },
     {
-      "source": "database._init_tables",
-      "target": "conn.cursor",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database._init_tables",
-      "target": "cursor.executescript",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database._init_tables",
-      "target": "conn.commit",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "database.query",
       "target": "database.get_connection",
       "type": "internal_call",
@@ -2936,87 +1484,10 @@
       "library": null
     },
     {
-      "source": "database.query",
-      "target": "conn.cursor",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database.query",
-      "target": "cursor.fetchall",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database.query",
-      "target": "cursor.execute",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "database.execute",
       "target": "database.get_connection",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "database.execute",
-      "target": "conn.cursor",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database.execute",
-      "target": "conn.commit",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database.execute",
-      "target": "cursor.execute",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "database.close",
-      "target": "_connection.close",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "models.to_dict",
-      "target": "str",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "models.to_dict",
-      "target": "item.to_dict",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "models.from_row",
-      "target": "cls",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "models.from_row",
-      "target": "bool",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -3024,13 +1495,6 @@
       "target": "database.execute",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "users._log_action",
-      "target": "logger.error",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -3062,27 +1526,6 @@
       "library": null
     },
     {
-      "source": "payments.process_payment",
-      "target": "logger.info",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments.process_payment",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments.process_payment",
-      "target": "round",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "payments.get_payment_status",
       "target": "database.query",
       "type": "internal_call",
@@ -3111,150 +1554,10 @@
       "library": null
     },
     {
-      "source": "users.check_permission",
-      "target": "role_hierarchy.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.check_permission",
-      "target": "user.get",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_payment_gateway",
-      "target": "random.random",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_payment_gateway",
-      "target": "logger.info",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_payment_gateway",
-      "target": "logger.warning",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_payment_gateway",
-      "target": "uuid.uuid4",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "payments._log_payment_action",
       "target": "database.execute",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "payments._log_payment_action",
-      "target": "logger.error",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_refund_gateway",
-      "target": "random.random",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_refund_gateway",
-      "target": "logger.info",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_refund_gateway",
-      "target": "logger.warning",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "payments._call_refund_gateway",
-      "target": "uuid.uuid4",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.hash_password",
-      "target": "secrets.token_hex",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.hash_password",
-      "target": "hexdigest",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.hash_password",
-      "target": "hashlib.sha256",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.hash_password",
-      "target": "encode",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.verify_password",
-      "target": "hashed_password.split",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.verify_password",
-      "target": "hexdigest",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.verify_password",
-      "target": "hashlib.sha256",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.verify_password",
-      "target": "encode",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.validate_session",
-      "target": "_active_sessions.get",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -3272,24 +1575,10 @@
       "library": null
     },
     {
-      "source": "users.get_user_by_email",
-      "target": "User.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
       "source": "users.change_password",
       "target": "database.query",
       "type": "internal_call",
       "confidence": 0.9,
-      "library": null
-    },
-    {
-      "source": "users.change_password",
-      "target": "User.from_row",
-      "type": "external_call",
-      "confidence": 0.7,
       "library": null
     },
     {
@@ -3315,13 +1604,6 @@
     },
     {
       "source": "users.change_password",
-      "target": "ValueError",
-      "type": "external_call",
-      "confidence": 0.7,
-      "library": null
-    },
-    {
-      "source": "users.change_password",
       "target": "users.verify_password",
       "type": "internal_call",
       "confidence": 0.9,
@@ -3330,128 +1612,86 @@
   ],
   "hotspots": [
     {
-      "module": "users",
+      "module": "app",
       "coupled_to": [
-        "models",
+        "users",
+        "payments",
         "database",
-        "_active_sessions",
-        "user",
-        "kwargs",
-        "round",
-        "encode",
-        "isoformat",
-        "datetime",
-        "hashed_password",
-        "hashlib",
-        "hexdigest",
-        "list",
-        "role_hierarchy",
-        "ValueError",
-        "secrets",
-        "updates",
-        "logger",
-        "UserProfile",
-        "User",
-        "join"
+        "orders"
       ],
-      "severity": "HIGH",
-      "reason": "users depends on 21 other modules: models, database, _active_sessions, user, kwargs, round, encode, isoformat, datetime, hashed_password, hashlib, hexdigest, list, role_hierarchy, ValueError, secrets, updates, logger, UserProfile, User, join"
+      "severity": "MEDIUM",
+      "reason": "app depends on 4 other modules: users, payments, database, orders"
     },
     {
       "module": "orders",
       "coupled_to": [
-        "validated_items",
-        "len",
-        "PermissionError",
-        "models",
-        "database",
-        "str",
-        "user",
-        "Order",
-        "payments",
-        "params",
-        "round",
-        "item",
-        "valid_transitions",
-        "ValueError",
-        "order",
-        "payment_result",
-        "items",
-        "logger",
-        "Product",
-        "users"
-      ],
-      "severity": "HIGH",
-      "reason": "orders depends on 20 other modules: validated_items, len, PermissionError, models, database, str, user, Order, payments, params, round, item, valid_transitions, ValueError, order, payment_result, items, logger, Product, users"
-    },
-    {
-      "module": "app",
-      "coupled_to": [
-        "data",
-        "replace",
-        "database",
-        "str",
-        "jsonify",
         "users",
-        "request",
         "payments",
-        "orders"
-      ],
-      "severity": "HIGH",
-      "reason": "app depends on 9 other modules: data, replace, database, str, jsonify, users, request, payments, orders"
-    },
-    {
-      "module": "payments",
-      "coupled_to": [
-        "max",
-        "uuid",
-        "round",
         "database",
-        "models",
-        "logger",
-        "ValueError",
-        "random"
-      ],
-      "severity": "HIGH",
-      "reason": "payments depends on 8 other modules: max, uuid, round, database, models, logger, ValueError, random"
-    },
-    {
-      "module": "database",
-      "coupled_to": [
-        "_connection",
-        "sqlite3",
-        "cursor",
-        "conn"
+        "models"
       ],
       "severity": "MEDIUM",
-      "reason": "database depends on 4 other modules: _connection, sqlite3, cursor, conn"
-    },
-    {
-      "module": "models",
-      "coupled_to": [
-        "bool",
-        "item",
-        "str",
-        "cls"
-      ],
-      "severity": "MEDIUM",
-      "reason": "models depends on 4 other modules: bool, item, str, cls"
+      "reason": "orders depends on 4 other modules: users, payments, database, models"
     },
     {
       "module": "orders.py",
       "coupled_to": [],
       "severity": "MEDIUM",
-      "reason": "High cyclomatic complexity and LOC, indicating potential for refactoring to improve readability and maintainability."
+      "reason": "High cyclomatic complexity and LOC, indicating potential areas for refactoring."
     },
     {
       "module": "payments.py",
       "coupled_to": [],
       "severity": "MEDIUM",
-      "reason": "Complex logic involving multiple external calls and conditional checks, suggesting a need for modularization or separation of concerns."
+      "reason": "High cyclomatic complexity and LOC, indicating potential areas for refactoring."
     }
   ],
   "external_dependencies": [
     "flask"
   ],
-  "circular_dependencies": []
+  "circular_dependencies": [],
+  "frontend_assets": [
+    {
+      "filename": "static\\app.js",
+      "asset_type": "script",
+      "api_dependencies": [
+        "/api/users"
+      ]
+    },
+    {
+      "filename": "static\\style.css",
+      "asset_type": "stylesheet",
+      "api_dependencies": []
+    },
+    {
+      "filename": "templates\\base.html",
+      "asset_type": "template",
+      "api_dependencies": []
+    },
+    {
+      "filename": "templates\\orders.html",
+      "asset_type": "template",
+      "api_dependencies": [
+        "/api/orders",
+        "/api/orders/stats",
+        "/api/users/1/orders"
+      ]
+    },
+    {
+      "filename": "templates\\payments.html",
+      "asset_type": "template",
+      "api_dependencies": [
+        "/api/payments/stats",
+        "/api/users/${userId}/payments"
+      ]
+    },
+    {
+      "filename": "templates\\users.html",
+      "asset_type": "template",
+      "api_dependencies": [
+        "/api/users",
+        "/api/users/${id}"
+      ]
+    }
+  ]
 }

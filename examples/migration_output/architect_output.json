@@ -1,87 +1,461 @@
 {
   "proposed_services": [
     {
-      "name": "UserManagement",
-      "bounded_context": "User Management",
+      "name": "app-service",
+      "bounded_context": "Domain covering: app",
       "modules": [
-        "users",
-        "user",
-        "_active_sessions",
-        "hashed_password",
-        "hashlib",
-        "secrets",
-        "role_hierarchy"
+        "app"
       ],
-      "tables": [
-        "UserProfile",
-        "User"
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
       ],
-      "endpoints": [],
       "inter_service_calls": [],
       "external_dependencies": [],
-      "confidence_score": 0.9,
-      "reason": "High cohesion in user-related operations and dependencies."
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
     },
     {
-      "name": "OrderProcessing",
-      "bounded_context": "Order Processing",
+      "name": "app-service-2",
+      "bounded_context": "Domain covering: app",
       "modules": [
+        "app"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "app-service-3",
+      "bounded_context": "Domain covering: app",
+      "modules": [
+        "app"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "app-service-4",
+      "bounded_context": "Domain covering: app",
+      "modules": [
+        "app"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-2",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-3",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-4",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "app-models-service",
+      "bounded_context": "Domain covering: app, models, users",
+      "modules": [
+        "app",
+        "models",
+        "users"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 8 nodes"
+    },
+    {
+      "name": "models-service-5",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "database-service",
+      "bounded_context": "Domain covering: database",
+      "modules": [
+        "database"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/database",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-6",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-7",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "app-database-service",
+      "bounded_context": "Domain covering: app, database, orders, payments, users",
+      "modules": [
+        "app",
+        "database",
         "orders",
-        "order",
-        "Order",
-        "items",
-        "Product"
+        "payments",
+        "users"
       ],
-      "tables": [
-        "Order",
-        "OrderItem"
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
       ],
-      "endpoints": [],
       "inter_service_calls": [],
       "external_dependencies": [],
-      "confidence_score": 0.9,
-      "reason": "High cohesion in order-related operations and dependencies."
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 18 nodes"
     },
     {
-      "name": "PaymentProcessing",
-      "bounded_context": "Payment Processing",
+      "name": "app-orders-service",
+      "bounded_context": "Domain covering: app, orders, payments, users",
       "modules": [
+        "app",
+        "orders",
         "payments",
-        "payment_result"
+        "users"
       ],
-      "tables": [
-        "Payment",
-        "Refund"
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
       ],
-      "endpoints": [],
       "inter_service_calls": [],
       "external_dependencies": [],
-      "confidence_score": 0.9,
-      "reason": "High cohesion in payment-related operations and dependencies."
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 6 nodes"
+    },
+    {
+      "name": "app-orders-service-2",
+      "bounded_context": "Domain covering: app, orders, payments",
+      "modules": [
+        "app",
+        "orders",
+        "payments"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 5 nodes"
+    },
+    {
+      "name": "app-database-service-2",
+      "bounded_context": "Domain covering: app, database, orders, users",
+      "modules": [
+        "app",
+        "database",
+        "orders",
+        "users"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 20 nodes"
+    },
+    {
+      "name": "users-service",
+      "bounded_context": "Domain covering: users",
+      "modules": [
+        "users"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/users",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-8",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "models-service-9",
+      "bounded_context": "Domain covering: models",
+      "modules": [
+        "models"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/models",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
+    },
+    {
+      "name": "app-service-5",
+      "bounded_context": "Domain covering: app",
+      "modules": [
+        "app"
+      ],
+      "tables": [],
+      "endpoints": [
+        {
+          "path": "/api/app",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        }
+      ],
+      "inter_service_calls": [],
+      "external_dependencies": [],
+      "confidence_score": 0.7,
+      "reason": "Community detection grouped 1 nodes"
     }
   ],
-  "inter_service_patterns": {
-    "synchronous": [
-      "UserManagement -> OrderProcessing",
-      "UserManagement -> PaymentProcessing",
-      "OrderProcessing -> UserManagement",
-      "OrderProcessing -> PaymentProcessing",
-      "PaymentProcessing -> UserManagement",
-      "PaymentProcessing -> OrderProcessing"
-    ]
-  },
-  "data_ownership": {
-    "UserManagement": [
-      "UserProfile",
-      "User"
-    ],
-    "OrderProcessing": [
-      "Order",
-      "OrderItem"
-    ],
-    "PaymentProcessing": [
-      "Payment",
-      "Refund"
-    ]
-  }
+  "inter_service_patterns": {},
+  "data_ownership": {}
 }
